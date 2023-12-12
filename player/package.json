@@ -1,16 +1,21 @@
 {
-  "name": "uno-demo-player",
-  "version": "1.1.0",
+  "name": "uno-player",
+  "version": "0.0.1",
+  "private": true,
   "description": "",
-  "main": "demo-player.js",
+  "main": "dist/main.js",
   "scripts": {
-    "start": "node demo-player.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
+    "start": "npm run build && node main.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "NIPPON TELEGRAPH AND TELEPHONE EAST CORPORATION",
-  "license": "ISC",
   "dependencies": {
     "bluebird": "^3.7.2",
-    "socket.io-client": "^2.3.0"
+    "socket.io-client": "^4.7.2",
+    "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "@types/bluebird": "^3.5.42",
+    "@types/node": "^20.10.4"
   }
 }
