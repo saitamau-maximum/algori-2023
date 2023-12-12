@@ -1,13 +1,49 @@
 // Socket 関係
 
 import { connect } from "socket.io-client";
+import { IDisconnect } from "./gamelog_types";
 
-export let client: SocketIOClient.Socket;
+let client: SocketIOClient.Socket;
+let isClientInitialized = false;
+const clientEventQueued = new Map<string, CallableFunction[]>();
 
 export function initializeClient(host: string) {
   client = connect(host, {
     transports: ["websocket"],
   });
+  client.connect();
+
+  client.on("connect", () => {
+    console.log("Client connect successfully!");
+  });
+
+  client.on("disconnect", (dataRes: IDisconnect) => {
+    console.log("Client disconnect.");
+    console.log(dataRes);
+    process.exit();
+  });
+
+  for (const [event, callbacks] of clientEventQueued) {
+    for (const callback of callbacks) {
+      client.on(event, callback);
+    }
+  }
+
+  isClientInitialized = true;
+}
+
+export function addClientEventListener(
+  event: string,
+  callback: CallableFunction
+) {
+  if (isClientInitialized) {
+    client.on(event, callback);
+  }
+
+  if (!clientEventQueued.has(event)) {
+    clientEventQueued.set(event, []);
+  }
+  clientEventQueued.get(event)?.push(callback);
 }
 
 /**
