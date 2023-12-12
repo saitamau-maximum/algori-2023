@@ -8,7 +8,10 @@ import {
   DrawReason,
   TEST_TOOL_HOST_PORT,
   ARR_COLOR,
+  SPECIAL_LOGIC_TITLE,
+  TEST_TOOL_EVENT_DATA_Wrap,
 } from "./constant";
+import { selectPlayCard } from "./select";
 
 /**
  * コマンドラインから受け取った変数等
@@ -18,7 +21,6 @@ const roomName = process.argv[3] || ""; // ディーラー名
 const player = process.argv[4] || ""; // プレイヤー名
 const eventName = process.argv[5]; // Socket通信イベント名
 const isTestTool = host.includes(TEST_TOOL_HOST_PORT); // 接続先が開発ガイドラインツールであるかを判定
-const SPECIAL_LOGIC_TITLE = "◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯"; // スペシャルロジック名
 const TIME_DELAY = 10; // 処理停止時間
 
 let id = ""; // 自分のID
@@ -46,85 +48,13 @@ if (!roomName || !player) {
   console.log(`Dealer: ${roomName}, Player: ${player}`);
 }
 
-// 開発ガイドラインツールSTEP1で送信するサンプルデータ
-const TEST_TOOL_EVENT_DATA = {
-  [SocketConst.EMIT.JOIN_ROOM]: {
-    player,
-    room_name: roomName,
-  },
-  [SocketConst.EMIT.COLOR_OF_WILD]: {
-    color_of_wild: "red",
-  },
-  [SocketConst.EMIT.PLAY_CARD]: {
-    card_play: { color: "black", special: "wild" },
-    yell_uno: false,
-    color_of_wild: "blue",
-  },
-  [SocketConst.EMIT.DRAW_CARD]: {},
-  [SocketConst.EMIT.PLAY_DRAW_CARD]: {
-    is_play_card: true,
-    yell_uno: true,
-    color_of_wild: "blue",
-  },
-  [SocketConst.EMIT.CHALLENGE]: {
-    is_challenge: true,
-  },
-  [SocketConst.EMIT.POINTED_NOT_SAY_UNO]: {
-    target: "Player 1",
-  },
-  [SocketConst.EMIT.SPECIAL_LOGIC]: {
-    title: SPECIAL_LOGIC_TITLE,
-  },
-};
-
 // Socketクライアント
 const client = connect(host, {
   transports: ["websocket"],
 });
 
-/**
- * 出すカードを選出する
- * @param cards 自分の手札
- * @param beforeCard 場札のカード
- */
-function selectPlayCard(cards: any, beforeCard: any) {
-  let cardsWild = []; // ワイルド・シャッフルワイルド・白いワイルドを格納
-  let cardsWild4 = []; // ワイルドドロー4を格納
-  let cardsValid = []; // 同じ色 または 同じ数字・記号 のカードを格納
-
-  // 場札と照らし合わせ出せるカードを抽出する
-  for (const card of cards) {
-    // ワイルドドロー4は場札に関係なく出せる
-    if (String(card.special) === Special.WILD_DRAW_4) {
-      cardsWild4.push(card);
-    } else if (
-      String(card.special) === Special.WILD ||
-      String(card.special) === Special.WILD_SHUFFLE ||
-      String(card.special) === Special.WHITE_WILD
-    ) {
-      // ワイルド・シャッフルワイルド・白いワイルドも場札に関係なく出せる
-      cardsWild.push(card);
-    } else if (String(card.color) === String(beforeCard.color)) {
-      // 場札と同じ色のカード
-      cardsValid.push(card);
-    } else if (
-      (card.special && String(card.special) === String(beforeCard.special)) ||
-      ((card.number || Number(card.number) === 0) &&
-        Number(card.number) === Number(beforeCard.number))
-    ) {
-      // 場札と数字または記号が同じカード
-      cardsValid.push(card);
-    }
-  }
-
-  /**
-   * 出せるカードのリストを結合し、先頭のカードを返却する。
-   * このプログラムでは優先順位を、「同じ色 または 同じ数字・記号」 > 「ワイルド・シャッフルワイルド・白いワイルド」 > ワイルドドロー4の順番とする。
-   * ワイルドドロー4は本来、手札に出せるカードが無い時に出していいカードであるため、一番優先順位を低くする。
-   * ワイルド・シャッフルワイルド・白いワイルドはいつでも出せるので、条件が揃わないと出せない「同じ色 または 同じ数字・記号」のカードより優先度を低くする。
-   */
-  return cardsValid.concat(cardsWild).concat(cardsWild4)[0];
-}
+// 開発ガイドラインツールSTEP1で送信するサンプルデータ
+const TEST_TOOL_EVENT_DATA = TEST_TOOL_EVENT_DATA_Wrap(player, roomName);
 
 /**
  * 乱数取得

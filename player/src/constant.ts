@@ -1,3 +1,5 @@
+import { TColor, TSpecial } from "./types";
+
 // Socket通信の全イベント名
 export const SocketConst = {
   EMIT: {
@@ -22,7 +24,7 @@ export const SocketConst = {
 };
 
 // UNOのカードの色
-export const Color = {
+export const Color: Record<string, TColor> = {
   RED: "red", // 赤
   YELLOW: "yellow", // 黄
   GREEN: "green", // 緑
@@ -32,7 +34,7 @@ export const Color = {
 };
 
 // UNOの記号カード種類
-export const Special = {
+export const Special: Record<string, TSpecial> = {
   SKIP: "skip", // スキップ
   REVERSE: "reverse", // リバース
   DRAW_2: "draw_2", // ドロー2
@@ -53,3 +55,39 @@ export const DrawReason = {
 
 export const TEST_TOOL_HOST_PORT = "3000"; // 開発ガイドラインツールのポート番号
 export const ARR_COLOR = [Color.RED, Color.YELLOW, Color.BLUE, Color.GREEN]; // 色変更の選択肢
+
+export const SPECIAL_LOGIC_TITLE = "◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯"; // スペシャルロジック名
+
+// 開発ガイドラインツールSTEP1で送信するサンプルデータ
+export const TEST_TOOL_EVENT_DATA_Wrap = (
+  player: string,
+  roomName: string
+) => ({
+  [SocketConst.EMIT.JOIN_ROOM]: {
+    player,
+    room_name: roomName,
+  },
+  [SocketConst.EMIT.COLOR_OF_WILD]: {
+    color_of_wild: "red",
+  },
+  [SocketConst.EMIT.PLAY_CARD]: {
+    card_play: { color: "black", special: "wild" },
+    yell_uno: false,
+    color_of_wild: "blue",
+  },
+  [SocketConst.EMIT.DRAW_CARD]: {},
+  [SocketConst.EMIT.PLAY_DRAW_CARD]: {
+    is_play_card: true,
+    yell_uno: true,
+    color_of_wild: "blue",
+  },
+  [SocketConst.EMIT.CHALLENGE]: {
+    is_challenge: true,
+  },
+  [SocketConst.EMIT.POINTED_NOT_SAY_UNO]: {
+    target: "Player 1",
+  },
+  [SocketConst.EMIT.SPECIAL_LOGIC]: {
+    title: SPECIAL_LOGIC_TITLE,
+  },
+});
