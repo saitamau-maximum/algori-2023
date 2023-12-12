@@ -1,70 +1,14 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-/* eslint-disable no-undef */
-/**
- * ALGORI Javascript版 デモプレイヤー
- */
-
-import socketIoClient from "socket.io-client";
+import { io } from "socket.io-client";
 import BlueBird from "bluebird";
 
-/**
- * 定数
- */
-// Socket通信の全イベント名
-const SocketConst = {
-  EMIT: {
-    JOIN_ROOM: "join-room", // 試合参加
-    RECEIVER_CARD: "receiver-card", // カードの配布
-    FIRST_PLAYER: "first-player", // 対戦開始
-    COLOR_OF_WILD: "color-of-wild", // 場札の色を変更する
-    UPDATE_COLOR: "update-color", // 場札の色が変更された
-    SHUFFLE_WILD: "shuffle-wild", // シャッフルしたカードの配布
-    NEXT_PLAYER: "next-player", // 自分の手番
-    PLAY_CARD: "play-card", // カードを出す
-    DRAW_CARD: "draw-card", // カードを山札から引く
-    PLAY_DRAW_CARD: "play-draw-card", // 山札から引いたカードを出す
-    CHALLENGE: "challenge", // チャレンジ
-    PUBLIC_CARD: "public-card", // 手札の公開
-    POINTED_NOT_SAY_UNO: "pointed-not-say-uno", // UNO宣言漏れの指摘
-    SPECIAL_LOGIC: "special-logic", // スペシャルロジック
-    FINISH_TURN: "finish-turn", // 対戦終了
-    FINISH_GAME: "finish-game", // 試合終了
-    PENALTY: "penalty", // ペナルティ
-  },
-};
-
-// UNOのカードの色
-const Color = {
-  RED: "red", // 赤
-  YELLOW: "yellow", // 黄
-  GREEN: "green", // 緑
-  BLUE: "blue", // 青
-  BLACK: "black", // 黒
-  WHITE: "white", // 白
-};
-
-// UNOの記号カード種類
-const Special = {
-  SKIP: "skip", // スキップ
-  REVERSE: "reverse", // リバース
-  DRAW_2: "draw_2", // ドロー2
-  WILD: "wild", // ワイルド
-  WILD_DRAW_4: "wild_draw_4", // ワイルドドロー4
-  WILD_SHUFFLE: "wild_shuffle", // シャッフルワイルド
-  WHITE_WILD: "white_wild", // 白いワイルド
-};
-
-// カードを引く理由
-const DrawReason = {
-  DRAW_2: "draw_2", // 直前のプレイヤーがドロー2を出した場合
-  WILD_DRAW_4: "wild_draw_4", // 直前のプレイヤーがワイルドドロー4を出した場合
-  BIND_2: "bind_2", // 直前のプレイヤーが白いワイルド（バインド2）を出した場合
-  SKIP_BIND_2: "skip_bind_2", // 直前のプレイヤーが白いワイルド（スキップバインド2）を出した場合
-  NOTHING: "nothing", // 理由なし
-};
-
-const TEST_TOOL_HOST_PORT = "3000"; // 開発ガイドラインツールのポート番号
-const ARR_COLOR = [Color.RED, Color.YELLOW, Color.BLUE, Color.GREEN]; // 色変更の選択肢
+import {
+  SocketConst,
+  Color,
+  Special,
+  DrawReason,
+  TEST_TOOL_HOST_PORT,
+  ARR_COLOR,
+} from "./constant";
 
 /**
  * コマンドラインから受け取った変数等
@@ -134,7 +78,7 @@ const TEST_TOOL_EVENT_DATA = {
 };
 
 // Socketクライアント
-const client = socketIoClient.connect(host, {
+const client = io(host, {
   transports: ["websocket"],
 });
 
@@ -143,7 +87,7 @@ const client = socketIoClient.connect(host, {
  * @param cards 自分の手札
  * @param beforeCard 場札のカード
  */
-function selectPlayCard(cards, beforeCard) {
+function selectPlayCard(cards: any, beforeCard: any) {
   let cardsWild = []; // ワイルド・シャッフルワイルド・白いワイルドを格納
   let cardsWild4 = []; // ワイルドドロー4を格納
   let cardsValid = []; // 同じ色 または 同じ数字・記号 のカードを格納
@@ -187,7 +131,7 @@ function selectPlayCard(cards, beforeCard) {
  * @param num 最大値
  * @returns
  */
-function randomByNumber(num) {
+function randomByNumber(num: number) {
   return Math.floor(Math.random() * num);
 }
 
@@ -211,7 +155,9 @@ function isChallenge() {
  * 他のプレイヤーのUNO宣言漏れをチェックする
  * @param numberCardOfPlayer
  */
-async function determineIfExecutePointedNotSayUno(numberCardOfPlayer) {
+async function determineIfExecutePointedNotSayUno(
+  numberCardOfPlayer: Record<any, any>
+) {
   let target;
   // 手札の枚数が1枚だけのプレイヤーを抽出する
   // 2枚以上所持しているプレイヤーはUNO宣言の状態をリセットする
@@ -225,7 +171,7 @@ async function determineIfExecutePointedNotSayUno(numberCardOfPlayer) {
       break;
     } else if (Object.keys(unoDeclared).indexOf(k) > -1) {
       // 2枚以上所持しているプレイヤーはUNO宣言の状態をリセットする
-      delete unoDeclared[k];
+      delete (unoDeclared as any)[k];
     }
   }
 
@@ -247,11 +193,11 @@ async function determineIfExecutePointedNotSayUno(numberCardOfPlayer) {
  * @param data 送信するデータ
  * @param callback 個別処理
  */
-function sendEvent(event, data, callback) {
+function sendEvent(event: any, data: any, callback?: CallableFunction) {
   console.log(`Send ${event} event.`);
   console.log(`req_data: ${JSON.stringify(data)}`);
 
-  client.emit(event, data, (err, res) => {
+  client.emit(event, data, (err: any, res: any) => {
     if (err) {
       // エラーをキャッチした場合ログを記録
       console.log(`Client ${event} failed!`);
@@ -274,7 +220,7 @@ function sendEvent(event, data, callback) {
  * @param data 受信するデータ
  * @param callback 個別処理
  */
-function receiveEvent(event, data, callback) {
+function receiveEvent(event: any, data: any, callback?: CallableFunction) {
   console.log(`Receive ${event} event.`);
   console.log(`res_data: ${JSON.stringify(data)}`);
 
@@ -305,7 +251,7 @@ if (isTestTool) {
   };
 
   // 試合に参加するイベントを実行
-  sendEvent(SocketConst.EMIT.JOIN_ROOM, data, (res) => {
+  sendEvent(SocketConst.EMIT.JOIN_ROOM, data, (res: any) => {
     console.log(`join-room res: ${JSON.stringify(res)}`);
     id = res.your_id;
     console.log(`My id is ${id}`);
@@ -371,10 +317,10 @@ client.on(SocketConst.EMIT.SHUFFLE_WILD, (dataRes) => {
       Object.keys(dataRes.number_card_of_player).forEach((player) => {
         if (dataRes.number_card_of_player[player] === 1) {
           // シャッフル後に1枚になったプレイヤーはUNO宣言を行ったこととする
-          unoDeclared[player] = true;
+          (unoDeclared as any)[player] = true;
         } else {
           // シャッフル後に2枚以上のカードが配られたプレイヤーはUNO宣言の状態をリセットする
-          delete unoDeclared[player];
+          delete (unoDeclared as any)[player];
         }
       });
     };
@@ -424,7 +370,7 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes) => {
         playCard.special === Special.WILD_DRAW_4
       ) {
         const color = selectChangeColor(); // 指定する色
-        data.color_of_wild = color;
+        (data as any).color_of_wild = color;
       }
 
       // カードを出すイベントを実行
@@ -433,7 +379,7 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes) => {
       // 選出したカードが無かった時
 
       // カードを引くイベントを実行
-      sendEvent(SocketConst.EMIT.DRAW_CARD, {}, (res) => {
+      sendEvent(SocketConst.EMIT.DRAW_CARD, {}, (res: any) => {
         if (!res.can_play_draw_card) {
           // 引いたカードが場に出せないので処理を終了
           return;
@@ -452,7 +398,7 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes) => {
           playCard.special === Special.WILD_DRAW_4
         ) {
           const color = selectChangeColor();
-          data.color_of_wild = color;
+          (data as any).color_of_wild = color;
         }
 
         // 引いたカードを出すイベントを実行
@@ -467,7 +413,7 @@ client.on(SocketConst.EMIT.PLAY_CARD, (dataRes) => {
   receiveEvent(SocketConst.EMIT.PLAY_CARD, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
-      unoDeclared[dataRes.player] = true;
+      (unoDeclared as any)[dataRes.player] = true;
     }
   });
 });
@@ -476,7 +422,7 @@ client.on(SocketConst.EMIT.PLAY_CARD, (dataRes) => {
 client.on(SocketConst.EMIT.DRAW_CARD, (dataRes) => {
   receiveEvent(SocketConst.EMIT.DRAW_CARD, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
-    delete unoDeclared[dataRes.player];
+    delete (unoDeclared as any)[dataRes.player];
   });
 });
 
@@ -485,7 +431,7 @@ client.on(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes) => {
   receiveEvent(SocketConst.EMIT.PLAY_DRAW_CARD, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
-      unoDeclared[dataRes.player] = true;
+      (unoDeclared as any)[dataRes.player] = true;
     }
   });
 });
@@ -522,6 +468,6 @@ client.on(SocketConst.EMIT.FINISH_GAME, (dataRes) => {
 client.on(SocketConst.EMIT.PENALTY, (dataRes) => {
   receiveEvent(SocketConst.EMIT.PENALTY, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
-    delete unoDeclared[dataRes.player];
+    delete (unoDeclared as any)[dataRes.player];
   });
 });
