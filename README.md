@@ -27,7 +27,7 @@ ALGORI 2023 Source
    - `Player 1`: プレイヤー名を適宜入れる
 
     ```bash
-    cd src
+    cd player
     docker build -t algori2023-player ./
 
     # Windows/Mac環境での実⾏
