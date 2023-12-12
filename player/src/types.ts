@@ -2,7 +2,7 @@ export type TColor = "red" | "yellow" | "green" | "blue" | "black" | "white";
 
 export interface INumberCard {
   type: "number";
-  number: number;
+  number: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   color: TColor;
 }
 

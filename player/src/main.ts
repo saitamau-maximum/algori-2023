@@ -1,6 +1,3 @@
-import { connect } from "socket.io-client";
-import BlueBird from "bluebird";
-
 import {
   SocketConst,
   Color,
@@ -12,6 +9,9 @@ import {
   TEST_TOOL_EVENT_DATA_Wrap,
 } from "./constant";
 import { selectPlayCard } from "./select";
+import { isChallenge, randomByNumber, selectChangeColor } from "./utils";
+import { client, initializeClient, receiveEvent, sendEvent } from "./socket";
+import { determineIfExecutePointedNotSayUno } from "./check_uno";
 
 /**
  * コマンドラインから受け取った変数等
@@ -21,7 +21,6 @@ const roomName = process.argv[3] || ""; // ディーラー名
 const player = process.argv[4] || ""; // プレイヤー名
 const eventName = process.argv[5]; // Socket通信イベント名
 const isTestTool = host.includes(TEST_TOOL_HOST_PORT); // 接続先が開発ガイドラインツールであるかを判定
-const TIME_DELAY = 10; // 処理停止時間
 
 let id = ""; // 自分のID
 let unoDeclared = {}; // 他のプレイヤーのUNO宣言状況
@@ -48,117 +47,10 @@ if (!roomName || !player) {
   console.log(`Dealer: ${roomName}, Player: ${player}`);
 }
 
-// Socketクライアント
-const client = connect(host, {
-  transports: ["websocket"],
-});
+initializeClient(host);
 
 // 開発ガイドラインツールSTEP1で送信するサンプルデータ
 const TEST_TOOL_EVENT_DATA = TEST_TOOL_EVENT_DATA_Wrap(player, roomName);
-
-/**
- * 乱数取得
- * @param num 最大値
- * @returns
- */
-function randomByNumber(num: number) {
-  return Math.floor(Math.random() * num);
-}
-
-/**
- * 変更する色を選出する
- */
-function selectChangeColor() {
-  // このプログラムでは変更する色をランダムで選択する。
-  return ARR_COLOR[randomByNumber(ARR_COLOR.length)];
-}
-
-/**
- * チャンレンジするかを決定する
- */
-function isChallenge() {
-  // このプログラムでは1/2の確率でチャレンジを行う。
-  return !!randomByNumber(2);
-}
-
-/**
- * 他のプレイヤーのUNO宣言漏れをチェックする
- * @param numberCardOfPlayer
- */
-async function determineIfExecutePointedNotSayUno(
-  numberCardOfPlayer: Record<any, any>
-) {
-  let target;
-  // 手札の枚数が1枚だけのプレイヤーを抽出する
-  // 2枚以上所持しているプレイヤーはUNO宣言の状態をリセットする
-  for (const [k, v] of Object.entries(numberCardOfPlayer)) {
-    if (k === id) {
-      // 自分のIDは処理しない
-      break;
-    } else if (v === 1) {
-      // 1枚だけ所持しているプレイヤー
-      target = k;
-      break;
-    } else if (Object.keys(unoDeclared).indexOf(k) > -1) {
-      // 2枚以上所持しているプレイヤーはUNO宣言の状態をリセットする
-      delete (unoDeclared as any)[k];
-    }
-  }
-
-  if (!target) {
-    // 1枚だけ所持しているプレイヤーがいない場合、処理を中断する
-    return;
-  }
-
-  // 抽出したプレイヤーがUNO宣言を行っていない場合宣言漏れを指摘する
-  if (Object.keys(unoDeclared).indexOf(target) === -1) {
-    sendEvent(SocketConst.EMIT.POINTED_NOT_SAY_UNO, { target });
-    await BlueBird.delay(TIME_DELAY);
-  }
-}
-
-/**
- * 送信イベント共通処理
- * @param event Socket通信イベント名
- * @param data 送信するデータ
- * @param callback 個別処理
- */
-function sendEvent(event: any, data: any, callback?: CallableFunction) {
-  console.log(`Send ${event} event.`);
-  console.log(`req_data: ${JSON.stringify(data)}`);
-
-  client.emit(event, data, (err: any, res: any) => {
-    if (err) {
-      // エラーをキャッチした場合ログを記録
-      console.log(`Client ${event} failed!`);
-      console.error(err);
-      return;
-    }
-
-    console.log(`Client ${event} successfully!`);
-    console.log(`res_data: ${JSON.stringify(res)}`);
-
-    if (callback) {
-      callback(res);
-    }
-  });
-}
-
-/**
- * 受信イベント共通処理
- * @param event Socket通信イベント名
- * @param data 受信するデータ
- * @param callback 個別処理
- */
-function receiveEvent(event: any, data: any, callback?: CallableFunction) {
-  console.log(`Receive ${event} event.`);
-  console.log(`res_data: ${JSON.stringify(data)}`);
-
-  // 個別処理の指定がある場合は実行する
-  if (callback) {
-    callback();
-  }
-}
 
 /**
  * Socket通信の確立
@@ -233,7 +125,11 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.NEXT_PLAYER, dataRes, async () => {
     // UNO宣言が漏れているプレイヤーがいないかチェックする。
     // 該当するプレイヤーがいる場合は指摘する。
-    await determineIfExecutePointedNotSayUno(dataRes.number_card_of_player);
+    await determineIfExecutePointedNotSayUno(
+      dataRes.number_card_of_player,
+      id,
+      unoDeclared
+    );
 
     const cards = dataRes.card_of_player;
 
@@ -254,7 +150,9 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
     // スペシャルロジックを発動させる
     const specialLogicNumRundom = randomByNumber(10); // 1/10で発動するように調整
     if (specialLogicNumRundom === 0) {
-      sendEvent(SocketConst.EMIT.SPECIAL_LOGIC, { title: SPECIAL_LOGIC_TITLE });
+      sendEvent(SocketConst.EMIT.SPECIAL_LOGIC, {
+        title: SPECIAL_LOGIC_TITLE,
+      });
     }
 
     const playCard = selectPlayCard(cards, dataRes.card_before);
@@ -268,8 +166,9 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
 
       // 出すカードがワイルドとワイルドドロー4の時は変更する色を指定する
       if (
-        playCard.special === Special.WILD ||
-        playCard.special === Special.WILD_DRAW_4
+        playCard.type === "special" &&
+        (playCard.special === Special.WILD ||
+          playCard.special === Special.WILD_DRAW_4)
       ) {
         const color = selectChangeColor(); // 指定する色
         (data as any).color_of_wild = color;

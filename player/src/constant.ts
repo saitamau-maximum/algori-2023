@@ -1,5 +1,7 @@
 import { TColor, TSpecial } from "./types";
 
+export const TIME_DELAY = 10; // 処理停止時間
+
 // Socket通信の全イベント名
 export const SocketConst = {
   EMIT: {
