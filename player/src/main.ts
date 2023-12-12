@@ -1,4 +1,4 @@
-import { io } from "socket.io-client";
+import { connect } from "socket.io-client";
 import BlueBird from "bluebird";
 
 import {
@@ -78,7 +78,7 @@ const TEST_TOOL_EVENT_DATA = {
 };
 
 // Socketクライアント
-const client = io(host, {
+const client = connect(host, {
   transports: ["websocket"],
 });
 
@@ -230,34 +230,6 @@ function receiveEvent(event: any, data: any, callback?: CallableFunction) {
   }
 }
 
-// プロセス起動時の処理。接続先によって振る舞いが異なる。
-if (isTestTool) {
-  // テストツールに接続
-  if (!eventName) {
-    // イベント名の指定がない（開発ガイドラインSTEP2の受信のテストを行う時）
-    console.log("Not found event name.");
-  } else if (!TEST_TOOL_EVENT_DATA[eventName]) {
-    // イベント名の指定があり、テストデータが定義されていない場合はエラー
-    console.log(`Undefined test data. eventName: ${eventName}`);
-  } else {
-    // イベント名の指定があり、テストデータが定義されている場合は送信する(開発ガイドラインSTEP1の送信のテストを行う時)
-    sendEvent(eventName, TEST_TOOL_EVENT_DATA[eventName]);
-  }
-} else {
-  // ディーラープログラムに接続
-  const data = {
-    room_name: roomName,
-    player,
-  };
-
-  // 試合に参加するイベントを実行
-  sendEvent(SocketConst.EMIT.JOIN_ROOM, data, (res: any) => {
-    console.log(`join-room res: ${JSON.stringify(res)}`);
-    id = res.your_id;
-    console.log(`My id is ${id}`);
-  });
-}
-
 /**
  * Socket通信の確立
  */
@@ -268,7 +240,7 @@ client.on("connect", () => {
 /**
  * Socket通信を切断
  */
-client.on("disconnect", (dataRes) => {
+client.on("disconnect", (dataRes: any) => {
   console.log("Client disconnect.");
   console.log(dataRes);
   // プロセスを終了する
@@ -279,22 +251,22 @@ client.on("disconnect", (dataRes) => {
  * Socket通信受信
  */
 // プレイヤーがゲームに参加
-client.on(SocketConst.EMIT.JOIN_ROOM, (dataRes) => {
+client.on(SocketConst.EMIT.JOIN_ROOM, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.JOIN_ROOM, dataRes);
 });
 
 // カードが手札に追加された
-client.on(SocketConst.EMIT.RECEIVER_CARD, (dataRes) => {
+client.on(SocketConst.EMIT.RECEIVER_CARD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.RECEIVER_CARD, dataRes);
 });
 
 // 対戦の開始
-client.on(SocketConst.EMIT.FIRST_PLAYER, (dataRes) => {
+client.on(SocketConst.EMIT.FIRST_PLAYER, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.FIRST_PLAYER, dataRes);
 });
 
 // 場札の色指定を要求
-client.on(SocketConst.EMIT.COLOR_OF_WILD, (dataRes) => {
+client.on(SocketConst.EMIT.COLOR_OF_WILD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.COLOR_OF_WILD, dataRes, () => {
     const color = selectChangeColor();
     const data = {
@@ -306,12 +278,12 @@ client.on(SocketConst.EMIT.COLOR_OF_WILD, (dataRes) => {
 });
 
 // 場札の色が変わった
-client.on(SocketConst.EMIT.UPDATE_COLOR, (dataRes) => {
+client.on(SocketConst.EMIT.UPDATE_COLOR, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.UPDATE_COLOR, dataRes);
 });
 
 // シャッフルワイルドにより手札状況が変更
-client.on(SocketConst.EMIT.SHUFFLE_WILD, (dataRes) => {
+client.on(SocketConst.EMIT.SHUFFLE_WILD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.SHUFFLE_WILD, dataRes),
     () => {
       Object.keys(dataRes.number_card_of_player).forEach((player) => {
@@ -327,7 +299,7 @@ client.on(SocketConst.EMIT.SHUFFLE_WILD, (dataRes) => {
 });
 
 // 自分の番
-client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes) => {
+client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.NEXT_PLAYER, dataRes, async () => {
     // UNO宣言が漏れているプレイヤーがいないかチェックする。
     // 該当するプレイヤーがいる場合は指摘する。
@@ -409,7 +381,7 @@ client.on(SocketConst.EMIT.NEXT_PLAYER, (dataRes) => {
 });
 
 // カードが場に出た
-client.on(SocketConst.EMIT.PLAY_CARD, (dataRes) => {
+client.on(SocketConst.EMIT.PLAY_CARD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.PLAY_CARD, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
@@ -419,7 +391,7 @@ client.on(SocketConst.EMIT.PLAY_CARD, (dataRes) => {
 });
 
 // 山札からカードを引いた
-client.on(SocketConst.EMIT.DRAW_CARD, (dataRes) => {
+client.on(SocketConst.EMIT.DRAW_CARD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.DRAW_CARD, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
     delete (unoDeclared as any)[dataRes.player];
@@ -427,7 +399,7 @@ client.on(SocketConst.EMIT.DRAW_CARD, (dataRes) => {
 });
 
 // 山札から引いたカードが場に出た
-client.on(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes) => {
+client.on(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.PLAY_DRAW_CARD, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
@@ -437,22 +409,22 @@ client.on(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes) => {
 });
 
 // チャレンジの結果
-client.on(SocketConst.EMIT.CHALLENGE, (dataRes) => {
+client.on(SocketConst.EMIT.CHALLENGE, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.CHALLENGE, dataRes);
 });
 
 // チャレンジによる手札の公開
-client.on(SocketConst.EMIT.PUBLIC_CARD, (dataRes) => {
+client.on(SocketConst.EMIT.PUBLIC_CARD, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.PUBLIC_CARD, dataRes);
 });
 
 // UNOコールを忘れていることを指摘
-client.on(SocketConst.EMIT.POINTED_NOT_SAY_UNO, (dataRes) => {
+client.on(SocketConst.EMIT.POINTED_NOT_SAY_UNO, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.POINTED_NOT_SAY_UNO, dataRes);
 });
 
 // 対戦が終了
-client.on(SocketConst.EMIT.FINISH_TURN, (dataRes) => {
+client.on(SocketConst.EMIT.FINISH_TURN, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.FINISH_TURN, dataRes, () => {
     // 新しい対戦が始まるのでUNO宣言の状態をリセットする
     unoDeclared = {};
@@ -460,14 +432,43 @@ client.on(SocketConst.EMIT.FINISH_TURN, (dataRes) => {
 });
 
 // 試合が終了
-client.on(SocketConst.EMIT.FINISH_GAME, (dataRes) => {
+client.on(SocketConst.EMIT.FINISH_GAME, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.FINISH_GAME, dataRes);
 });
 
 // ペナルティ発生
-client.on(SocketConst.EMIT.PENALTY, (dataRes) => {
+client.on(SocketConst.EMIT.PENALTY, (dataRes: any) => {
   receiveEvent(SocketConst.EMIT.PENALTY, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
     delete (unoDeclared as any)[dataRes.player];
   });
 });
+
+// プロセス起動時の処理。接続先によって振る舞いが異なる。
+if (isTestTool) {
+  // テストツールに接続
+  if (!eventName) {
+    // イベント名の指定がない（開発ガイドラインSTEP2の受信のテストを行う時）
+    console.log("Not found event name.");
+  } else if (!TEST_TOOL_EVENT_DATA[eventName]) {
+    // イベント名の指定があり、テストデータが定義されていない場合はエラー
+    console.log(`Undefined test data. eventName: ${eventName}`);
+  } else {
+    // イベント名の指定があり、テストデータが定義されている場合は送信する(開発ガイドラインSTEP1の送信のテストを行う時)
+    sendEvent(eventName, TEST_TOOL_EVENT_DATA[eventName]);
+  }
+} else {
+  // ディーラープログラムに接続
+  const data = {
+    room_name: roomName,
+    player,
+  };
+  client.connect();
+
+  // 試合に参加するイベントを実行
+  sendEvent(SocketConst.EMIT.JOIN_ROOM, data, (res: any) => {
+    console.log(`join-room res: ${JSON.stringify(res)}`);
+    id = res.your_id;
+    console.log(`My id is ${id}`);
+  });
+}
