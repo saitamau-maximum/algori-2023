@@ -1,7 +1,8 @@
 import Bluebird from "bluebird";
 
-import { SocketConst, TIME_DELAY } from "./constant";
+import { TIME_DELAY } from "./constant";
 import { sendEvent } from "./socket";
+import { PointedNotSayUno } from "./gamelog_types";
 
 /**
  * 他のプレイヤーのUNO宣言漏れをチェックする
@@ -36,7 +37,7 @@ export async function determineIfExecutePointedNotSayUno(
 
   // 抽出したプレイヤーがUNO宣言を行っていない場合宣言漏れを指摘する
   if (Object.keys(unoDeclared).indexOf(target) === -1) {
-    sendEvent(SocketConst.EMIT.POINTED_NOT_SAY_UNO, { target });
+    sendEvent(PointedNotSayUno.name, { target });
     await Bluebird.delay(TIME_DELAY);
   }
 }

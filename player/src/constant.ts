@@ -1,29 +1,16 @@
+import {
+  Challenge,
+  ColorOfWild,
+  DrawCard,
+  JoinRoom,
+  PlayCard,
+  PlayDrawCard,
+  PointedNotSayUno,
+  SpecialLogic,
+} from "./gamelog_types";
 import { TColor, TDrawReason, TSpecial } from "./types";
 
 export const TIME_DELAY = 10; // 処理停止時間
-
-// Socket通信の全イベント名
-export const SocketConst = {
-  EMIT: {
-    JOIN_ROOM: "join-room", // 試合参加
-    RECEIVER_CARD: "receiver-card", // カードの配布
-    FIRST_PLAYER: "first-player", // 対戦開始
-    COLOR_OF_WILD: "color-of-wild", // 場札の色を変更する
-    UPDATE_COLOR: "update-color", // 場札の色が変更された
-    SHUFFLE_WILD: "shuffle-wild", // シャッフルしたカードの配布
-    NEXT_PLAYER: "next-player", // 自分の手番
-    PLAY_CARD: "play-card", // カードを出す
-    DRAW_CARD: "draw-card", // カードを山札から引く
-    PLAY_DRAW_CARD: "play-draw-card", // 山札から引いたカードを出す
-    CHALLENGE: "challenge", // チャレンジ
-    PUBLIC_CARD: "public-card", // 手札の公開
-    POINTED_NOT_SAY_UNO: "pointed-not-say-uno", // UNO宣言漏れの指摘
-    SPECIAL_LOGIC: "special-logic", // スペシャルロジック
-    FINISH_TURN: "finish-turn", // 対戦終了
-    FINISH_GAME: "finish-game", // 試合終了
-    PENALTY: "penalty", // ペナルティ
-  },
-};
 
 // UNOのカードの色
 export const Color: Record<string, TColor> = {
@@ -65,31 +52,31 @@ export const TEST_TOOL_EVENT_DATA_Wrap = (
   player: string,
   roomName: string
 ) => ({
-  [SocketConst.EMIT.JOIN_ROOM]: {
+  [JoinRoom.name]: {
     player,
     room_name: roomName,
   },
-  [SocketConst.EMIT.COLOR_OF_WILD]: {
+  [ColorOfWild.name]: {
     color_of_wild: "red",
   },
-  [SocketConst.EMIT.PLAY_CARD]: {
+  [PlayCard.name]: {
     card_play: { color: "black", special: "wild" },
     yell_uno: false,
     color_of_wild: "blue",
   },
-  [SocketConst.EMIT.DRAW_CARD]: {},
-  [SocketConst.EMIT.PLAY_DRAW_CARD]: {
+  [DrawCard.name]: {},
+  [PlayDrawCard.name]: {
     is_play_card: true,
     yell_uno: true,
     color_of_wild: "blue",
   },
-  [SocketConst.EMIT.CHALLENGE]: {
+  [Challenge.name]: {
     is_challenge: true,
   },
-  [SocketConst.EMIT.POINTED_NOT_SAY_UNO]: {
+  [PointedNotSayUno.name]: {
     target: "Player 1",
   },
-  [SocketConst.EMIT.SPECIAL_LOGIC]: {
+  [SpecialLogic.name]: {
     title: SPECIAL_LOGIC_TITLE,
   },
 });

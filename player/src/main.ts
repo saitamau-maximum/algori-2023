@@ -1,5 +1,4 @@
 import {
-  SocketConst,
   Color,
   Special,
   DrawReason,
