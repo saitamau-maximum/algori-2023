@@ -55,28 +55,28 @@ export const TEST_TOOL_EVENT_DATA_Wrap = (
   [JoinRoom.name]: {
     player,
     room_name: roomName,
-  },
+  } as JoinRoom.Emit,
   [ColorOfWild.name]: {
     color_of_wild: "red",
-  },
+  } as ColorOfWild.Emit,
   [PlayCard.name]: {
     card_play: { color: "black", special: "wild" },
     yell_uno: false,
     color_of_wild: "blue",
-  },
-  [DrawCard.name]: {},
+  } as PlayCard.Emit,
+  [DrawCard.name]: {} as DrawCard.Emit,
   [PlayDrawCard.name]: {
     is_play_card: true,
     yell_uno: true,
     color_of_wild: "blue",
-  },
+  } as PlayDrawCard.Emit,
   [Challenge.name]: {
     is_challenge: true,
-  },
+  } as Challenge.Emit,
   [PointedNotSayUno.name]: {
     target: "Player 1",
-  },
+  } as PointedNotSayUno.Emit,
   [SpecialLogic.name]: {
     title: SPECIAL_LOGIC_TITLE,
-  },
+  } as SpecialLogic.Emit,
 });
