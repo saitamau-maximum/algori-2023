@@ -7,6 +7,8 @@ import {
   PlayDrawCard,
   PointedNotSayUno,
   SpecialLogic,
+  TEventEmit,
+  TEventName,
 } from "./gamelog_types";
 import { TColor, TDrawReason, TSpecial } from "./types";
 
@@ -48,35 +50,33 @@ export const ARR_COLOR = [Color.RED, Color.YELLOW, Color.BLUE, Color.GREEN]; // 
 export const SPECIAL_LOGIC_TITLE = "◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯"; // スペシャルロジック名
 
 // 開発ガイドラインツールSTEP1で送信するサンプルデータ
-export const TEST_TOOL_EVENT_DATA_Wrap = (
-  player: string,
-  roomName: string
-) => ({
-  [JoinRoom.name]: {
-    player,
-    room_name: roomName,
-  } as JoinRoom.Emit,
-  [ColorOfWild.name]: {
-    color_of_wild: "red",
-  } as ColorOfWild.Emit,
-  [PlayCard.name]: {
-    card_play: { color: "black", special: "wild" },
-    yell_uno: false,
-    color_of_wild: "blue",
-  } as PlayCard.Emit,
-  [DrawCard.name]: {} as DrawCard.Emit,
-  [PlayDrawCard.name]: {
-    is_play_card: true,
-    yell_uno: true,
-    color_of_wild: "blue",
-  } as PlayDrawCard.Emit,
-  [Challenge.name]: {
-    is_challenge: true,
-  } as Challenge.Emit,
-  [PointedNotSayUno.name]: {
-    target: "Player 1",
-  } as PointedNotSayUno.Emit,
-  [SpecialLogic.name]: {
-    title: SPECIAL_LOGIC_TITLE,
-  } as SpecialLogic.Emit,
-});
+export const TEST_TOOL_EVENT_DATA_Wrap = (player: string, roomName: string) =>
+  ({
+    [JoinRoom.name]: {
+      player,
+      room_name: roomName,
+    } as JoinRoom.Emit,
+    [ColorOfWild.name]: {
+      color_of_wild: "red",
+    } as ColorOfWild.Emit,
+    [PlayCard.name]: {
+      card_play: { color: "black", special: "wild" },
+      yell_uno: false,
+      color_of_wild: "blue",
+    } as PlayCard.Emit,
+    [DrawCard.name]: {} as DrawCard.Emit,
+    [PlayDrawCard.name]: {
+      is_play_card: true,
+      yell_uno: true,
+      color_of_wild: "blue",
+    } as PlayDrawCard.Emit,
+    [Challenge.name]: {
+      is_challenge: true,
+    } as Challenge.Emit,
+    [PointedNotSayUno.name]: {
+      target: "Player 1",
+    } as PointedNotSayUno.Emit,
+    [SpecialLogic.name]: {
+      title: SPECIAL_LOGIC_TITLE,
+    } as SpecialLogic.Emit,
+  } as Record<TEventName, TEventEmit>);

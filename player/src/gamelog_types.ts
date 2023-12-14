@@ -234,3 +234,52 @@ export namespace Penalty {
     error: string;
   }
 }
+
+export type TEventName =
+  | typeof JoinRoom.name
+  | typeof PlayCard.name
+  | typeof DrawCard.name
+  | typeof PlayDrawCard.name
+  | typeof Challenge.name
+  | typeof PointedNotSayUno.name
+  | typeof SpecialLogic.name
+  | typeof ReceiverCard.name
+  | typeof FirstPlayer.name
+  | typeof ColorOfWild.name
+  | typeof UpdateColor.name
+  | typeof ShuffleWild.name
+  | typeof NextPlayer.name
+  | typeof PublicCard.name
+  | typeof FinishTurn.name
+  | typeof FinishGame.name
+  | typeof Penalty.name;
+
+export type TEventEmit =
+  | JoinRoom.Emit
+  | PlayCard.Emit
+  | DrawCard.Emit
+  | PlayDrawCard.Emit
+  | Challenge.Emit
+  | PointedNotSayUno.Emit
+  | SpecialLogic.Emit
+  | UpdateColor.Emit;
+
+export type TEventCallback = JoinRoom.Callback | DrawCard.Callback;
+
+export type TEventOn =
+  | JoinRoom.On
+  | PlayCard.On
+  | DrawCard.On
+  | PlayDrawCard.On
+  | Challenge.On
+  | PointedNotSayUno.On
+  | ReceiverCard.On
+  | FirstPlayer.On
+  | ColorOfWild.On
+  | UpdateColor.On
+  | ShuffleWild.On
+  | NextPlayer.On
+  | PublicCard.On
+  | FinishTurn.On
+  | FinishGame.On
+  | Penalty.On;

@@ -33,6 +33,7 @@ import {
   ReceiverCard,
   ShuffleWild,
   SpecialLogic,
+  TEventName,
   UpdateColor,
 } from "./gamelog_types";
 
@@ -42,7 +43,7 @@ import {
 const host = process.argv[2] || ""; // 接続先（ディーラープログラム or 開発ガイドラインツール）
 const roomName = process.argv[3] || ""; // ディーラー名
 const player = process.argv[4] || ""; // プレイヤー名
-const eventName = process.argv[5]; // Socket通信イベント名
+const eventName = process.argv[5] as TEventName; // Socket通信イベント名
 const isTestTool = host.includes(TEST_TOOL_HOST_PORT); // 接続先が開発ガイドラインツールであるかを判定
 
 let id = ""; // 自分のID
