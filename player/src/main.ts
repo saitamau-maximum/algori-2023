@@ -17,6 +17,25 @@ import {
   sendEvent,
 } from "./socket";
 import { determineIfExecutePointedNotSayUno } from "./check_uno";
+import {
+  Challenge,
+  ColorOfWild,
+  DrawCard,
+  FinishGame,
+  FinishTurn,
+  FirstPlayer,
+  JoinRoom,
+  NextPlayer,
+  Penalty,
+  PlayCard,
+  PlayDrawCard,
+  PointedNotSayUno,
+  PublicCard,
+  ReceiverCard,
+  ShuffleWild,
+  SpecialLogic,
+  UpdateColor,
+} from "./gamelog_types";
 
 /**
  * コマンドラインから受け取った変数等
@@ -61,40 +80,40 @@ const TEST_TOOL_EVENT_DATA = TEST_TOOL_EVENT_DATA_Wrap(player, roomName);
  * Socket通信受信
  */
 // プレイヤーがゲームに参加
-addClientEventListener(SocketConst.EMIT.JOIN_ROOM, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.JOIN_ROOM, dataRes);
+addClientEventListener(JoinRoom.name, (dataRes: JoinRoom.On) => {
+  receiveEvent(JoinRoom.name, dataRes);
 });
 
 // カードが手札に追加された
-addClientEventListener(SocketConst.EMIT.RECEIVER_CARD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.RECEIVER_CARD, dataRes);
+addClientEventListener(ReceiverCard.name, (dataRes: ReceiverCard.On) => {
+  receiveEvent(ReceiverCard.name, dataRes);
 });
 
 // 対戦の開始
-addClientEventListener(SocketConst.EMIT.FIRST_PLAYER, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.FIRST_PLAYER, dataRes);
+addClientEventListener(FirstPlayer.name, (dataRes: FirstPlayer.On) => {
+  receiveEvent(FirstPlayer.name, dataRes);
 });
 
 // 場札の色指定を要求
-addClientEventListener(SocketConst.EMIT.COLOR_OF_WILD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.COLOR_OF_WILD, dataRes, () => {
+addClientEventListener(ColorOfWild.name, (dataRes: ColorOfWild.On) => {
+  receiveEvent(ColorOfWild.name, dataRes, () => {
     const color = selectChangeColor();
-    const data = {
+    const data: ColorOfWild.Emit = {
       color_of_wild: color,
     };
 
-    sendEvent(SocketConst.EMIT.COLOR_OF_WILD, data);
+    sendEvent(ColorOfWild.name, data);
   });
 });
 
 // 場札の色が変わった
-addClientEventListener(SocketConst.EMIT.UPDATE_COLOR, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.UPDATE_COLOR, dataRes);
+addClientEventListener(UpdateColor.name, (dataRes: UpdateColor.On) => {
+  receiveEvent(UpdateColor.name, dataRes);
 });
 
 // シャッフルワイルドにより手札状況が変更
-addClientEventListener(SocketConst.EMIT.SHUFFLE_WILD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.SHUFFLE_WILD, dataRes),
+addClientEventListener(ShuffleWild.name, (dataRes: ShuffleWild.On) => {
+  receiveEvent(ShuffleWild.name, dataRes),
     () => {
       Object.keys(dataRes.number_card_of_player).forEach((player) => {
         if (dataRes.number_card_of_player[player] === 1) {
@@ -109,8 +128,8 @@ addClientEventListener(SocketConst.EMIT.SHUFFLE_WILD, (dataRes: any) => {
 });
 
 // 自分の番
-addClientEventListener(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.NEXT_PLAYER, dataRes, async () => {
+addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
+  receiveEvent(NextPlayer.name, dataRes, async () => {
     // UNO宣言が漏れているプレイヤーがいないかチェックする。
     // 該当するプレイヤーがいる場合は指摘する。
     await determineIfExecutePointedNotSayUno(
@@ -124,21 +143,21 @@ addClientEventListener(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
     if (dataRes.draw_reason === DrawReason.WILD_DRAW_4) {
       // カードを引く理由がワイルドドロー4の時、チャレンジを行うことができる。
       if (isChallenge()) {
-        sendEvent(SocketConst.EMIT.CHALLENGE, { is_challenge: true });
+        sendEvent(Challenge.name, { is_challenge: true });
         return;
       }
     }
 
     if (dataRes.must_call_draw_card) {
       // 引かなければいけない場合
-      sendEvent(SocketConst.EMIT.DRAW_CARD, {});
+      sendEvent(DrawCard.name, {});
       return;
     }
 
     // スペシャルロジックを発動させる
     const specialLogicNumRundom = randomByNumber(10); // 1/10で発動するように調整
     if (specialLogicNumRundom === 0) {
-      sendEvent(SocketConst.EMIT.SPECIAL_LOGIC, {
+      sendEvent(SpecialLogic.name, {
         title: SPECIAL_LOGIC_TITLE,
       });
     }
@@ -163,12 +182,12 @@ addClientEventListener(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
       }
 
       // カードを出すイベントを実行
-      sendEvent(SocketConst.EMIT.PLAY_CARD, data);
+      sendEvent(PlayCard.name, data);
     } else {
       // 選出したカードが無かった時
 
       // カードを引くイベントを実行
-      sendEvent(SocketConst.EMIT.DRAW_CARD, {}, (res: any) => {
+      sendEvent(DrawCard.name, {}, (res: DrawCard.Callback) => {
         if (!res.can_play_draw_card) {
           // 引いたカードが場に出せないので処理を終了
           return;
@@ -191,15 +210,15 @@ addClientEventListener(SocketConst.EMIT.NEXT_PLAYER, (dataRes: any) => {
         }
 
         // 引いたカードを出すイベントを実行
-        sendEvent(SocketConst.EMIT.PLAY_DRAW_CARD, data);
+        sendEvent(PlayDrawCard.name, data);
       });
     }
   });
 });
 
 // カードが場に出た
-addClientEventListener(SocketConst.EMIT.PLAY_CARD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.PLAY_CARD, dataRes, () => {
+addClientEventListener(PlayCard.name, (dataRes: PlayCard.On) => {
+  receiveEvent(PlayCard.name, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
       (unoDeclared as any)[dataRes.player] = true;
@@ -208,16 +227,16 @@ addClientEventListener(SocketConst.EMIT.PLAY_CARD, (dataRes: any) => {
 });
 
 // 山札からカードを引いた
-addClientEventListener(SocketConst.EMIT.DRAW_CARD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.DRAW_CARD, dataRes, () => {
+addClientEventListener(DrawCard.name, (dataRes: DrawCard.On) => {
+  receiveEvent(DrawCard.name, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
     delete (unoDeclared as any)[dataRes.player];
   });
 });
 
 // 山札から引いたカードが場に出た
-addClientEventListener(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.PLAY_DRAW_CARD, dataRes, () => {
+addClientEventListener(PlayDrawCard.name, (dataRes: PlayDrawCard.On) => {
+  receiveEvent(PlayDrawCard.name, dataRes, () => {
     // UNO宣言を行った場合は記録する
     if (dataRes.yell_uno) {
       (unoDeclared as any)[dataRes.player] = true;
@@ -226,36 +245,39 @@ addClientEventListener(SocketConst.EMIT.PLAY_DRAW_CARD, (dataRes: any) => {
 });
 
 // チャレンジの結果
-addClientEventListener(SocketConst.EMIT.CHALLENGE, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.CHALLENGE, dataRes);
+addClientEventListener(Challenge.name, (dataRes: Challenge.On) => {
+  receiveEvent(Challenge.name, dataRes);
 });
 
 // チャレンジによる手札の公開
-addClientEventListener(SocketConst.EMIT.PUBLIC_CARD, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.PUBLIC_CARD, dataRes);
+addClientEventListener(PublicCard.name, (dataRes: PublicCard.On) => {
+  receiveEvent(PublicCard.name, dataRes);
 });
 
 // UNOコールを忘れていることを指摘
-addClientEventListener(SocketConst.EMIT.POINTED_NOT_SAY_UNO, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.POINTED_NOT_SAY_UNO, dataRes);
-});
+addClientEventListener(
+  PointedNotSayUno.name,
+  (dataRes: PointedNotSayUno.On) => {
+    receiveEvent(PointedNotSayUno.name, dataRes);
+  }
+);
 
 // 対戦が終了
-addClientEventListener(SocketConst.EMIT.FINISH_TURN, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.FINISH_TURN, dataRes, () => {
+addClientEventListener(FinishTurn.name, (dataRes: FinishTurn.On) => {
+  receiveEvent(FinishTurn.name, dataRes, () => {
     // 新しい対戦が始まるのでUNO宣言の状態をリセットする
     unoDeclared = {};
   });
 });
 
 // 試合が終了
-addClientEventListener(SocketConst.EMIT.FINISH_GAME, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.FINISH_GAME, dataRes);
+addClientEventListener(FinishGame.name, (dataRes: FinishGame.On) => {
+  receiveEvent(FinishGame.name, dataRes);
 });
 
 // ペナルティ発生
-addClientEventListener(SocketConst.EMIT.PENALTY, (dataRes: any) => {
-  receiveEvent(SocketConst.EMIT.PENALTY, dataRes, () => {
+addClientEventListener(Penalty.name, (dataRes: Penalty.On) => {
+  receiveEvent(Penalty.name, dataRes, () => {
     // カードが増えているのでUNO宣言の状態をリセットする
     delete (unoDeclared as any)[dataRes.player];
   });
@@ -282,7 +304,7 @@ if (isTestTool) {
   };
 
   // 試合に参加するイベントを実行
-  sendEvent(SocketConst.EMIT.JOIN_ROOM, data, (res: any) => {
+  sendEvent(JoinRoom.name, data, (res: JoinRoom.Callback) => {
     console.log(`join-room res: ${JSON.stringify(res)}`);
     id = res.your_id;
     console.log(`My id is ${id}`);
