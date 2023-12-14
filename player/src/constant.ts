@@ -1,4 +1,4 @@
-import { TColor, TSpecial } from "./types";
+import { TColor, TDrawReason, TSpecial } from "./types";
 
 export const TIME_DELAY = 10; // 処理停止時間
 
@@ -47,7 +47,7 @@ export const Special: Record<string, TSpecial> = {
 };
 
 // カードを引く理由
-export const DrawReason = {
+export const DrawReason: Record<string, TDrawReason> = {
   DRAW_2: "draw_2", // 直前のプレイヤーがドロー2を出した場合
   WILD_DRAW_4: "wild_draw_4", // 直前のプレイヤーがワイルドドロー4を出した場合
   BIND_2: "bind_2", // 直前のプレイヤーが白いワイルド（バインド2）を出した場合

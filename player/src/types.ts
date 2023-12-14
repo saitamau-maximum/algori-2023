@@ -1,3 +1,10 @@
+export type TDrawReason =
+  | "draw_2"
+  | "wild_draw_4"
+  | "bind_2"
+  | "skip_bind_2"
+  | "nothing";
+
 export type TColor = "red" | "yellow" | "green" | "blue" | "black" | "white";
 
 export interface INumberCard {
