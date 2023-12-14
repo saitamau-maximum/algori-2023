@@ -1,9 +1,12 @@
 FROM node:20.10.0-slim
+
 WORKDIR /app
 
-COPY . .
+COPY node_modules package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci
+
+COPY . .
 
 RUN npm run build
 
