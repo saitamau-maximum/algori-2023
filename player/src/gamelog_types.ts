@@ -1,4 +1,4 @@
-import { TCard, TDrawReason } from "./types";
+import { TCard, TColor, TDrawReason } from "./types";
 
 // 試合参加
 export namespace JoinRoom {
@@ -31,14 +31,14 @@ export namespace PlayCard {
   export interface Emit {
     card_play: TCard;
     yell_uno: boolean;
-    color_of_wild: string;
+    color_of_wild: TColor | undefined;
   }
 
   export interface On {
     player: string;
     card_play: TCard;
     yell_uno: boolean;
-    color_of_wild: string;
+    color_of_wild: TColor | undefined;
   }
 }
 
@@ -68,7 +68,7 @@ export namespace PlayDrawCard {
   export interface Emit {
     is_play_card: boolean;
     yell_uno: boolean;
-    color_of_wild: string;
+    color_of_wild: TColor | undefined;
   }
 
   export interface On {
@@ -76,7 +76,7 @@ export namespace PlayDrawCard {
     is_play_card: boolean;
     card_play: TCard;
     yell_uno: boolean;
-    color_of_wild: string;
+    color_of_wild: TColor | undefined;
   }
 }
 
@@ -148,7 +148,7 @@ export namespace ColorOfWild {
   export interface On {}
 
   export interface Emit {
-    color_of_wild: string;
+    color_of_wild: TColor;
   }
 }
 

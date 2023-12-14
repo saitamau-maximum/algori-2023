@@ -47,7 +47,7 @@ const eventName = process.argv[5] as TEventName; // Socket通信イベント名
 const isTestTool = host.includes(TEST_TOOL_HOST_PORT); // 接続先が開発ガイドラインツールであるかを判定
 
 let id = ""; // 自分のID
-let unoDeclared = {}; // 他のプレイヤーのUNO宣言状況
+let unoDeclared: Record<string, boolean> = {}; // 他のプレイヤーのUNO宣言状況
 
 /**
  * コマンドライン引数のチェック
@@ -118,10 +118,10 @@ addClientEventListener(ShuffleWild.name, (dataRes: ShuffleWild.On) => {
       Object.keys(dataRes.number_card_of_player).forEach((player) => {
         if (dataRes.number_card_of_player[player] === 1) {
           // シャッフル後に1枚になったプレイヤーはUNO宣言を行ったこととする
-          (unoDeclared as any)[player] = true;
+          unoDeclared[player] = true;
         } else {
           // シャッフル後に2枚以上のカードが配られたプレイヤーはUNO宣言の状態をリセットする
-          delete (unoDeclared as any)[player];
+          delete unoDeclared[player];
         }
       });
     };
@@ -166,9 +166,10 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
     if (playCard) {
       // 選出したカードがある時
       console.log(`selected card: ${JSON.stringify(playCard)}`);
-      const data = {
+      const data: PlayCard.Emit = {
         card_play: playCard,
         yell_uno: cards.length === 2, // 残り手札数を考慮してUNOコールを宣言する
+        color_of_wild: undefined,
       };
 
       // 出すカードがワイルドとワイルドドロー4の時は変更する色を指定する
@@ -178,7 +179,7 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
           playCard.special === Special.WILD_DRAW_4)
       ) {
         const color = selectChangeColor(); // 指定する色
-        (data as any).color_of_wild = color;
+        data.color_of_wild = color;
       }
 
       // カードを出すイベントを実行
@@ -194,19 +195,21 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
         }
 
         // 以後、引いたカードが場に出せるときの処理
-        const data = {
+        const data: PlayDrawCard.Emit = {
           is_play_card: true,
           yell_uno: cards.concat(res.draw_card).length === 2, // 残り手札数を考慮してUNOコールを宣言する
+          color_of_wild: undefined,
         };
 
         const playCard = res.draw_card[0]; // 引いたカード。draw-cardイベントのcallbackデータは引いたカードのリスト形式であるため、配列の先頭を指定する。
         // 引いたカードがワイルドとワイルドドロー4の時は変更する色を指定する
         if (
-          playCard.special === Special.WILD ||
-          playCard.special === Special.WILD_DRAW_4
+          (playCard.type === "special" && playCard.special === Special.WILD) ||
+          (playCard.type === "special" &&
+            playCard.special === Special.WILD_DRAW_4)
         ) {
           const color = selectChangeColor();
-          (data as any).color_of_wild = color;
+          data.color_of_wild = color;
         }
 
         // 引いたカードを出すイベントを実行

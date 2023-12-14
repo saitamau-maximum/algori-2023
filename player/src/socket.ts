@@ -1,7 +1,6 @@
 // Socket 関係
 
 import { connect } from "socket.io-client";
-import { IDisconnect } from "./gamelog_types";
 
 let client: SocketIOClient.Socket;
 let isClientInitialized = false;
@@ -17,7 +16,7 @@ export function initializeClient(host: string) {
     console.log("Client connect successfully!");
   });
 
-  client.on("disconnect", (dataRes: IDisconnect) => {
+  client.on("disconnect", (dataRes: string) => {
     console.log("Client disconnect.");
     console.log(dataRes);
     process.exit();
