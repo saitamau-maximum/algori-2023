@@ -157,6 +157,51 @@ export class WebController {
   }
 
   /**
+   * ディーラー新規追加 (API)
+   * @param {Request} req リクエスト
+   * @param {Response} res レスポンス
+   * @returns
+   */
+  public async addDealerAPI(req: Request, res: Response) {
+    // リクエストデータのバリデーションチェック
+    req.checkBody('name').trim().notEmpty().withMessage(AppConst.NAME_DEALER_IS_REQUIRED);
+    req
+      .checkBody('totalTurn')
+      .trim()
+      .notEmpty()
+      .withMessage(AppConst.TOTAL_TURN_IS_REQUIRED)
+      .isInt({ min: 1 })
+      .withMessage(AppConst.TOTAL_TURN_INVALID);
+    const errors = req.validationErrors();
+
+
+    try {
+      let dealer = null;
+      if (!errors.length) {
+        // バリデーションにエラーがなければ処理を続行
+        const bodyCreate: any = {
+          name: req.body.name, // ディーラー名
+          players: [], // プレイヤーリスト（空リストで固定）
+          status: StatusGame.NEW, // ゲームステータス（NEWで固定）
+          totalTurn: req.body.totalTurn, // 総対戦数
+          whiteWild: req.body.whiteWild, // 白いワイルドの効果
+        };
+
+        // ディーラーを作成
+        dealer = await dealerService.create(bodyCreate);
+        getLogger('admin', '').info('Add new dealer.');
+      }
+
+      // UI描画
+      return res.json({
+        dealer,
+      });
+    } catch (e) {
+      return res.bad(e);
+    }
+  }
+
+  /**
    * 試合にプレイヤーを参加
    * @param {Request} req リクエスト
    * @param {Response} res レスポンス
@@ -220,6 +265,40 @@ export class WebController {
   }
 
   /**
+   * 試合にプレイヤーを参加 (API)
+   * @param {Request} req リクエスト
+   * @param {Response} res レスポンス
+   * @returns
+   */
+  public async addPlayerAPI(req: Request, res: Response) {
+    try {
+      const errors = [];
+
+      // 試合にプレイヤーを追加する
+      const player = await playerService.addPlayer(req.params.id).catch((err) => {
+        errors.push({
+          msg: err,
+        });
+      });
+      getLogger('admin', '').info(`Added a player to ${req.params.id}. Player: ${player}.`);
+
+      // エラーがなければ1.5秒待ってからレスポンスを返す
+      if (!errors.length) {
+        await Bluebird.delay(1500); // NOTE: 補助プレイヤー起動〜試合参加までの時間分
+      } else {
+        throw new Error('Add player failed.');
+      }
+
+      // UI描画
+      return res.json({
+        player,
+      });
+    } catch (e) {
+      return res.bad(e);
+    }
+  }
+
+  /**
    * 試合を開始
    * @param {Request} req リクエスト
    * @param {Response} res レスポンス
@@ -272,6 +351,36 @@ export class WebController {
     } catch (e) {
       getLogger('admin', '').error(e);
       res.bad(e);
+    }
+  }
+
+  /**
+   * 試合を開始 (API)
+   * @param {Request} req リクエスト
+   * @param {Response} res レスポンス
+   * @returns
+   */
+  public async startDealerAPI(req: Request, res: Response) {
+    try {
+      const errors = [];
+      // 試合を開始
+      const desk = await dealerService.startDealer(req.params.id).catch((err) => {
+        errors.push({
+          msg: err,
+        });
+      });
+      getLogger('admin', '').info(`Start game ${req.params.id}.`);
+
+      if (errors.length) {
+        throw new Error('Game start failed.', errors);
+      }
+
+      // UI描画
+      return res.json({
+        desk,
+      });
+    } catch (e) {
+      return res.bad(e);
     }
   }
 
