@@ -372,7 +372,7 @@ export class WebController {
       getLogger('admin', '').info(`Start game ${req.params.id}.`);
 
       if (errors.length) {
-        throw new Error('Game start failed.', errors);
+        throw new Error(`Game start failed. ${errors}`);
       }
 
       // UI描画
