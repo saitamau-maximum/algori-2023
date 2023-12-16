@@ -17,13 +17,28 @@ router.post('/admin/web/new', webCtrl.addDealer, {
   allowAnonymous: true,
 });
 
+// ディーラー新規作成 (API)
+router.post('/admin/web/new/api', webCtrl.addDealerAPI, {
+  allowAnonymous: true,
+});
+
 // 試合にプレイヤーを追加
 router.post('/admin/web/:id/player', webCtrl.addPlayer, {
   allowAnonymous: true,
 });
 
+// 試合にプレイヤーを追加 (API)
+router.post('/admin/web/:id/player/api', webCtrl.addPlayerAPI, {
+  allowAnonymous: true,
+});
+
 // 試合開始
 router.post('/admin/web/:id/start-dealer', webCtrl.startDealer, {
+  allowAnonymous: true,
+});
+
+// 試合開始 (API)
+router.post('/admin/web/:id/start-dealer/api', webCtrl.startDealerAPI, {
   allowAnonymous: true,
 });
 
