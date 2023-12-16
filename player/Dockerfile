@@ -2,7 +2,7 @@ FROM node:20.10.0-slim
 
 WORKDIR /app
 
-COPY node_modules package.json package-lock.json ./
+COPY package*.json ./
 
 RUN npm ci
 
