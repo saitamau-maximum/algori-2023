@@ -1,13 +1,11 @@
-name: Benchmark
+name: Benchmark Main
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - "player/**"
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true # avoid running multiple benchmark jobs at the same time
 
 env:
   BENCHMARKER_BASE_URL: http://algori.2xsei.com
@@ -16,7 +14,7 @@ env:
   BENCHMARKER_START_GAME_PATH: /api/v1/admin/web/%%DEALER_CODE%%/start-dealer/api
   BENCHMARKER_RESULT_PATH: /api/v1/admin/web/log/%%DEALER_CODE%%/api
   BENCHMARKER_DEALER_CONFIG_TEMPLATE: '{"name": "%%DEALER_NAME%%", "totalTurn": %%TOTAL_TURN%%, "whiteWild": "%%WHITE_WILD%%"}'
-  DEALER_NAME_TEMPLATE: "Dealer %%BRANCH_NAME%% %%COMMIT_HASH%%"
+  DEALER_NAME_TEMPLATE: "Dealer main %%COMMIT_HASH%%"
   DEFAULT_TOTAL_TURN: 100
   DEFAULT_WHITE_WILD: "skip_bind_2" # or bind_2
   DEFAULT_DUMMY_PLAYER_COUNT: 3 # 3 dummy players and 1 real player (docker run in workflow)
@@ -28,10 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
       - name: Build docker image
         run: cd player && docker build -t benchmark .
       - name: Branch name
@@ -47,7 +41,7 @@ jobs:
           echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
       - name: Dealer name
         run: |
-          DEALER_NAME=$(echo $DEALER_NAME_TEMPLATE | sed "s/%%BRANCH_NAME%%/$BRANCH_NAME_ESCAPED/g" | sed "s/%%COMMIT_HASH%%/$COMMIT_HASH/g")
+          DEALER_NAME=$(echo $DEALER_NAME_TEMPLATE | sed "s/%%COMMIT_HASH%%/$COMMIT_HASH/g")
           echo $DEALER_NAME
           echo "DEALER_NAME=$DEALER_NAME" >> $GITHUB_ENV
       - name: Create a dealer
@@ -71,17 +65,13 @@ jobs:
           sleep 3 && \
           curl -X POST $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_START_GAME_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") && \
           docker wait $ID
-      - name: Get main report from cache
+      - name: Get benchmark result
+        run: |
+          RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores') && \
+          echo $RESULT && \
+          echo $RESULT > $MAIN_REPORT_PATH
+      - name: Save benchmark result to cache
         uses: actions/cache@v2
         with:
           path: ${{ env.MAIN_REPORT_PATH }}
           key: ${{ env.MAIN_REPORT_NAME }}
-          restore-keys: ${{ env.MAIN_REPORT_NAME }}
-      - name: Create report and comment on PR
-        id: report
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          ISSUE_NUMBER: ${{ github.event.number }}
-        run: |
-          node script/report.js $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") ${{ env.MAIN_REPORT_PATH }} $DEALER_NAME $DEALER_CODE $BRANCH_NAME $COMMIT_HASH $GITHUB_TOKEN $GITHUB_REPOSITORY $ISSUE_NUMBER
