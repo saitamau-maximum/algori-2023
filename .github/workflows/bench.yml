@@ -14,6 +14,8 @@ env:
   DEFAULT_TOTAL_TURN: 1
   DEFAULT_WHITE_WILD: "skip_bind_2" # or bind_2
   DEFAULT_DUMMY_PLAYER_COUNT: 3 # 3 dummy players and 1 real player (docker run in workflow)
+  MAIN_REPORT_PATH: ./result.json
+  MAIN_REPORT_NAME: benchmark-main-result
 
 jobs:
   benchmark:
@@ -64,6 +66,11 @@ jobs:
           RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores') && \
           echo $RESULT && \
           echo "RESULT=$RESULT" >> $GITHUB_ENV
+      - name: Get main report from artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ env.MAIN_REPORT_NAME }}
+          path: ${{ env.MAIN_REPORT_PATH }}
       - name: Create report
         id: report
         run: |
@@ -73,9 +80,14 @@ jobs:
           message="$message Branch name: $BRANCH_NAME$lf"
           message="$message Commit hash: $COMMIT_HASH$lf"
           message="$message $lf"
-          message="$message | Player | Score |$lf"
+          message="$message | Player | Score | Diff from main | Rate |$lf"
           for player in $(echo $RESULT | jq -r 'keys[]'); do
-            message="$message | $player | $(echo $RESULT | jq -r ".\"$player\"") |$lf"
+            main_score=$(cat ${{ env.MAIN_REPORT_PATH }} | jq -r ".\"$player\"")
+            score=$(echo $RESULT | jq -r ".\"$player\"")
+            diff=$(echo "$score - $main_score" | bc)
+            rate=$(echo "scale=2; ($diff / $main_score * 100) - 100" | bc)
+            rate_decorated=$(echo $rate | awk '{printf "%+.2f", $0}')
+            message="$message | $player | $score | $diff | $rate% |$lf"
           done
           message="$message $lf"
           message="$message [詳細な計測結果を見る]($(echo $BENCHMARKER_BASE_URL$BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g"))"
