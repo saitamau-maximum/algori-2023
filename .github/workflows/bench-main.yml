@@ -12,7 +12,7 @@ env:
   BENCHMARKER_NEW_DEALER_PATH: /api/v1/admin/web/new/api
   BENCHMARKER_ADD_PLAYER_PATH: /api/v1/admin/web/%%DEALER_CODE%%/player/api
   BENCHMARKER_START_GAME_PATH: /api/v1/admin/web/%%DEALER_CODE%%/start-dealer/api
-  BENCHMARKER_RESULT_PATH: /api/v1/admin/web/log/%%DEALER_CODE%%
+  BENCHMARKER_RESULT_PATH: /api/v1/admin/web/log/%%DEALER_CODE%%/api
   BENCHMARKER_DEALER_CONFIG_TEMPLATE: '{"name": "%%DEALER_NAME%%", "totalTurn": %%TOTAL_TURN%%, "whiteWild": "%%WHITE_WILD%%"}'
   DEALER_NAME_TEMPLATE: "Dealer main %%COMMIT_HASH%%"
   DEFAULT_TOTAL_TURN: 100
