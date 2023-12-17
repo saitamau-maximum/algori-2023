@@ -72,8 +72,7 @@ jobs:
         with:
           path: ${{ env.MAIN_REPORT_PATH }}
           key: ${{ env.MAIN_REPORT_NAME }}
-          restore-keys: |
-            ${{ env.MAIN_REPORT_NAME }}
+          restore-keys: ${{ env.MAIN_REPORT_NAME }}
       - name: Create report
         id: report
         run: |

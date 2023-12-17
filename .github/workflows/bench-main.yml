@@ -73,5 +73,5 @@ jobs:
       - name: Save benchmark result to cache
         uses: actions/cache@v2
         with:
-          path: $MAIN_REPORT_PATH
-          key: $MAIN_REPORT_NAME
+          path: ${{ env.MAIN_REPORT_PATH }}
+          key: ${{ env.MAIN_REPORT_NAME }}
