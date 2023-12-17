@@ -67,11 +67,6 @@ jobs:
           sleep 3 && \
           curl -X POST $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_START_GAME_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") && \
           docker wait $ID
-      - name: Get benchmark result
-        run: |
-          RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores') && \
-          echo $RESULT && \
-          echo "RESULT=$RESULT" >> $GITHUB_ENV
       - name: Get main report from artifact
         uses: actions/download-artifact@v2
         with:
@@ -80,6 +75,8 @@ jobs:
       - name: Create report
         id: report
         run: |
+          RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores')
+          echo $RESULT
           lf='\n'
           message="Dealer name: $DEALER_NAME$lf"
           message="$message Dealer code: $DEALER_CODE$lf"
