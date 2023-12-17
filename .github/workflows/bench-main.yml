@@ -1,0 +1,75 @@
+name: Benchmark Main
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  BENCHMARKER_BASE_URL: http://algori.2xsei.com
+  BENCHMARKER_NEW_DEALER_PATH: /api/v1/admin/web/new/api
+  BENCHMARKER_ADD_PLAYER_PATH: /api/v1/admin/web/%%DEALER_CODE%%/player/api
+  BENCHMARKER_START_GAME_PATH: /api/v1/admin/web/%%DEALER_CODE%%/start-dealer/api
+  BENCHMARKER_RESULT_PATH: /api/v1/admin/web/log/%%DEALER_CODE%%
+  BENCHMARKER_DEALER_CONFIG_TEMPLATE: '{"name": "%%DEALER_NAME%%", "totalTurn": %%TOTAL_TURN%%, "whiteWild": "%%WHITE_WILD%%"}'
+  DEALER_NAME_TEMPLATE: "Dealer main %%COMMIT_HASH%%"
+  DEFAULT_TOTAL_TURN: 1
+  DEFAULT_WHITE_WILD: "skip_bind_2" # or bind_2
+  DEFAULT_DUMMY_PLAYER_COUNT: 3 # 3 dummy players and 1 real player (docker run in workflow)
+  MAIN_REPORT_PATH: ./result.json
+  MAIN_REPORT_NAME: benchmark-main-result
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build docker image
+        run: cd player && docker build -t benchmark .
+      - name: Branch name
+        run: |
+          BRANCH_NAME=$(echo ${GITHUB_HEAD_REF:-$GITHUB_REF} | sed "s/refs\/heads\///g")
+          echo $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "BRANCH_NAME_ESCAPED=$(echo $BRANCH_NAME | sed "s/\//-/g")" >> $GITHUB_ENV
+      - name: Commit hash
+        run: |
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          echo $COMMIT_HASH
+          echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
+      - name: Dealer name
+        run: |
+          DEALER_NAME=$(echo $DEALER_NAME_TEMPLATE | sed "s/%%COMMIT_HASH%%/$COMMIT_HASH/g")
+          echo $DEALER_NAME
+          echo "DEALER_NAME=$DEALER_NAME" >> $GITHUB_ENV
+      - name: Create a dealer
+        run: |
+          PAYLOAD=$(echo $BENCHMARKER_DEALER_CONFIG_TEMPLATE | sed "s/%%DEALER_NAME%%/$DEALER_NAME/g" | sed "s/%%TOTAL_TURN%%/$DEFAULT_TOTAL_TURN/g" | sed "s/%%WHITE_WILD%%/$DEFAULT_WHITE_WILD/g") && \
+          echo $PAYLOAD && \
+          DEALER_CODE=$(curl -X POST -H "Content-Type:application/json" -d "$PAYLOAD" $BENCHMARKER_BASE_URL$BENCHMARKER_NEW_DEALER_PATH | jq -r '.dealer.code') && \
+          echo $DEALER_CODE && \
+          echo "DEALER_CODE=$DEALER_CODE" >> $GITHUB_ENV
+      - name: Add dummy players
+        run: |
+          for i in $(seq 1 $DEFAULT_DUMMY_PLAYER_COUNT); do \
+            curl -X POST $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_ADD_PLAYER_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g"); \
+            sleep 3; \
+          done
+      - name: Run benchmark
+        run: |
+          CMD="docker run -d benchmark \"$BENCHMARKER_BASE_URL\" \"$DEALER_NAME\" \"Benchmark Player\"" && \
+          echo $CMD && \
+          ID=$(eval $CMD) && \
+          sleep 3 && \
+          curl -X POST $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_START_GAME_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") && \
+          docker wait $ID
+      - name: Get benchmark result
+        run: |
+          RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores') && \
+          echo $RESULT && \
+          echo $RESULT > $MAIN_REPORT_PATH
+      - name: Save benchmark result to artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.MAIN_REPORT_NAME }}
+          path: ${{ env.MAIN_REPORT_PATH }}
