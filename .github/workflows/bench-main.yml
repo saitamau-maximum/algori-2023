@@ -70,8 +70,8 @@ jobs:
           RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores') && \
           echo $RESULT && \
           echo $RESULT > $MAIN_REPORT_PATH
-      - name: Save benchmark result to artifact
-        uses: actions/upload-artifact@v2
+      - name: Save benchmark result to cache
+        uses: actions/cache@v2
         with:
-          name: ${{ env.MAIN_REPORT_NAME }}
-          path: ${{ env.MAIN_REPORT_PATH }}
+          path: $MAIN_REPORT_PATH
+          key: $MAIN_REPORT_NAME

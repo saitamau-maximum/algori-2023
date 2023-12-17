@@ -67,11 +67,13 @@ jobs:
           sleep 3 && \
           curl -X POST $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_START_GAME_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") && \
           docker wait $ID
-      - name: Get main report from artifact
-        uses: actions/download-artifact@v2
+      - name: Get main report from cache
+        uses: actions/cache@v2
         with:
-          name: ${{ env.MAIN_REPORT_NAME }}
           path: ${{ env.MAIN_REPORT_PATH }}
+          key: ${{ env.MAIN_REPORT_NAME }}
+          restore-keys: |
+            ${{ env.MAIN_REPORT_NAME }}
       - name: Create report
         id: report
         run: |
