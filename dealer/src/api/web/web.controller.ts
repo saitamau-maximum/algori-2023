@@ -454,6 +454,44 @@ export class WebController {
   }
 
   /**
+   * ゲームログ情報を取得 (API)
+   * @param {Request} req リクエスト
+   * @param {Response} res レスポンス
+   */
+  public async logAPI(req: Request, res: Response) {
+    try {
+      // ログの検索条件
+      const events = req.query.event as string[];
+      const eventsCondition = typeof events === 'string' ? [events] : events;
+      const params = {
+        event: events ? eventsCondition : Object.keys(EVENTS).filter((name) => EVENTS[name]),
+      };
+
+      // ゲームログを取得する
+      const data = await webService.log(req.params.id, params, Number(req.query.turn || 1));
+
+      // プレイヤー情報とプレイヤーコードを紐づけるMap
+      const playersMap = new Map<string, any>();
+      for (const player of data.allPlayers) {
+        playersMap.set(player.code, player);
+      }
+
+      // scoreのキーがプレイヤーコードになっているので、プレイヤー名に変換する
+      const scores = {};
+      for (const key of Object.keys(data.game.score)) {
+        scores[playersMap.get(key).name] = data.game.score[key];
+      }
+
+      // UI描画
+      return res.json({
+        scores,
+      });
+    } catch (e) {
+      return res.bad(e);
+    }
+  }
+
+  /**
    * ゲームログファイルをDL
    * @param {Request} req リクエスト
    * @param {Response} res レスポンス
