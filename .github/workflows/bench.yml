@@ -3,6 +3,10 @@ name: Benchmark
 on:
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true # avoid running multiple benchmark jobs at the same time
+
 env:
   BENCHMARKER_BASE_URL: http://algori.2xsei.com
   BENCHMARKER_NEW_DEALER_PATH: /api/v1/admin/web/new/api
