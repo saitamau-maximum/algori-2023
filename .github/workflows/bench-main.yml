@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "player/**"
 
 env:
   BENCHMARKER_BASE_URL: http://algori.2xsei.com
@@ -13,7 +15,7 @@ env:
   BENCHMARKER_RESULT_PATH: /api/v1/admin/web/log/%%DEALER_CODE%%
   BENCHMARKER_DEALER_CONFIG_TEMPLATE: '{"name": "%%DEALER_NAME%%", "totalTurn": %%TOTAL_TURN%%, "whiteWild": "%%WHITE_WILD%%"}'
   DEALER_NAME_TEMPLATE: "Dealer main %%COMMIT_HASH%%"
-  DEFAULT_TOTAL_TURN: 1
+  DEFAULT_TOTAL_TURN: 100
   DEFAULT_WHITE_WILD: "skip_bind_2" # or bind_2
   DEFAULT_DUMMY_PLAYER_COUNT: 3 # 3 dummy players and 1 real player (docker run in workflow)
   MAIN_REPORT_PATH: ./result.json
