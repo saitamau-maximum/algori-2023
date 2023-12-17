@@ -28,6 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
       - name: Build docker image
         run: cd player && docker build -t benchmark .
       - name: Branch name
@@ -73,38 +77,11 @@ jobs:
           path: ${{ env.MAIN_REPORT_PATH }}
           key: ${{ env.MAIN_REPORT_NAME }}
           restore-keys: ${{ env.MAIN_REPORT_NAME }}
-      - name: Create report
+      - name: Create report and comment on PR
         id: report
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.number }}
         run: |
-          RESULT=$(curl -X GET $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") | jq -r '.scores')
-          echo $RESULT
-          lf='\n'
-          message="Dealer name: $DEALER_NAME$lf"
-          message="$message Dealer code: $DEALER_CODE$lf"
-          message="$message Branch name: $BRANCH_NAME$lf"
-          message="$message Commit hash: $COMMIT_HASH$lf"
-          message="$message $lf"
-          message="$message | Player | Score | Diff from main | Rate |$lf"
-          message="$message | --- | --- | --- | --- |$lf"
-          for player in $(echo $RESULT | jq -r 'keys[]'); do
-            main_score=$(cat ${{ env.MAIN_REPORT_PATH }} | jq -r ".\"$player\"")
-            score=$(echo $RESULT | jq -r ".\"$player\"")
-            diff=$(echo "$score - $main_score" | bc)
-            rate=$(echo "scale=2; ($diff / $main_score * 100) - 100" | bc)
-            rate_decorated=$(echo $rate | awk '{printf "%+.2f", $0}')
-            message="$message | $player | $score | $diff | $rate% |$lf"
-          done
-          message="$message $lf"
-          message="$message [詳細な計測結果を見る]($(echo $BENCHMARKER_BASE_URL$BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g"))"
-          echo "message=${message}" >> $GITHUB_OUTPUT
-      - name: Comment on PR
-        uses: actions/github-script@v3
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '${{ steps.report.outputs.message }}'
-            })
+          node script/report.js $BENCHMARKER_BASE_URL$(echo $BENCHMARKER_RESULT_PATH | sed "s/%%DEALER_CODE%%/$DEALER_CODE/g") ${{ env.MAIN_REPORT_PATH }} $DEALER_NAME $DEALER_CODE $BRANCH_NAME $COMMIT_HASH $GITHUB_TOKEN $GITHUB_REPOSITORY $ISSUE_NUMBER
