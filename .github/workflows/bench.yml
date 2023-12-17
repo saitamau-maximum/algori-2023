@@ -85,6 +85,7 @@ jobs:
           message="$message Commit hash: $COMMIT_HASH$lf"
           message="$message $lf"
           message="$message | Player | Score | Diff from main | Rate |$lf"
+          message="$message | --- | --- | --- | --- |$lf"
           for player in $(echo $RESULT | jq -r 'keys[]'); do
             main_score=$(cat ${{ env.MAIN_REPORT_PATH }} | jq -r ".\"$player\"")
             score=$(echo $RESULT | jq -r ".\"$player\"")
