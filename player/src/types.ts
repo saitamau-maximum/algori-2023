@@ -8,10 +8,12 @@ export type TDrawReason =
 export type TColor = "red" | "yellow" | "green" | "blue" | "black" | "white";
 
 export interface INumberCard {
-  type: "number";
   number: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
   color: TColor;
 }
+
+export const isNumberCard = (card: TCard): card is INumberCard =>
+  "number" in card;
 
 export type TSpecial =
   | "skip"
@@ -23,9 +25,11 @@ export type TSpecial =
   | "white_wild";
 
 export interface ISpecialCard {
-  type: "special";
   color: TColor;
   special: TSpecial;
 }
+
+export const isSpecialCard = (card: TCard): card is ISpecialCard =>
+  "special" in card;
 
 export type TCard = INumberCard | ISpecialCard;
