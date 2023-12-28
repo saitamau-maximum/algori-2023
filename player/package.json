@@ -2,10 +2,12 @@
   "name": "uno-player",
   "version": "0.0.1",
   "private": true,
+  "description": "",
   "main": "dist/main.js",
   "scripts": {
     "start": "npm run build && node main.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
