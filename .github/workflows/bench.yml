@@ -4,7 +4,7 @@ on:
   pull_request:
 
 env:
-  BENCHMARKER_BASE_URL: http://algori.2xsei.com
+  BENCHMARKER_BASE_URL: https://algori.2xsei.com
   BENCHMARKER_NEW_DEALER_PATH: /api/v1/admin/web/new/api
   BENCHMARKER_ADD_PLAYER_PATH: /api/v1/admin/web/%%DEALER_CODE%%/player/api
   BENCHMARKER_START_GAME_PATH: /api/v1/admin/web/%%DEALER_CODE%%/start-dealer/api
