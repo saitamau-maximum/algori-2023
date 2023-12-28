@@ -36,6 +36,7 @@ import {
   TEventName,
   UpdateColor,
 } from "./gamelog_types";
+import { isSpecialCard } from "./types";
 
 /**
  * コマンドラインから受け取った変数等
@@ -174,7 +175,7 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
 
       // 出すカードがワイルドとワイルドドロー4の時は変更する色を指定する
       if (
-        playCard.type === "special" &&
+        isSpecialCard(playCard) &&
         (playCard.special === Special.WILD ||
           playCard.special === Special.WILD_DRAW_4)
       ) {
@@ -204,9 +205,8 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
         const playCard = res.draw_card[0]; // 引いたカード。draw-cardイベントのcallbackデータは引いたカードのリスト形式であるため、配列の先頭を指定する。
         // 引いたカードがワイルドとワイルドドロー4の時は変更する色を指定する
         if (
-          (playCard.type === "special" && playCard.special === Special.WILD) ||
-          (playCard.type === "special" &&
-            playCard.special === Special.WILD_DRAW_4)
+          isSpecialCard(playCard) &&
+          [Special.WILD, Special.WILD_DRAW_4].includes(playCard.special)
         ) {
           const color = selectChangeColor();
           data.color_of_wild = color;
