@@ -1,21 +1,11 @@
-import {
-  Color,
-  Special,
-  DrawReason,
-  TEST_TOOL_HOST_PORT,
-  ARR_COLOR,
-  SPECIAL_LOGIC_TITLE,
-  TEST_TOOL_EVENT_DATA_Wrap,
-} from "./constant";
-import { selectPlayCard } from "./select";
-import { isChallenge, randomByNumber, selectChangeColor } from "./utils";
-import {
-  addClientEventListener,
-  initializeClient,
-  receiveEvent,
-  sendEvent,
-} from "./socket";
 import { determineIfExecutePointedNotSayUno } from "./check_uno";
+import {
+  DrawReason,
+  SPECIAL_LOGIC_TITLE,
+  Special,
+  TEST_TOOL_EVENT_DATA_Wrap,
+  TEST_TOOL_HOST_PORT,
+} from "./constant";
 import {
   Challenge,
   ColorOfWild,
@@ -36,7 +26,15 @@ import {
   TEventName,
   UpdateColor,
 } from "./gamelog_types";
+import { selectPlayCard } from "./select";
+import {
+  addClientEventListener,
+  initializeClient,
+  receiveEvent,
+  sendEvent,
+} from "./socket";
 import { isSpecialCard } from "./types";
+import { isChallenge, randomByNumber, selectChangeColor } from "./utils";
 
 /**
  * コマンドラインから受け取った変数等

@@ -1,5 +1,6 @@
 import { Special } from "./constant";
-import { TCard, isSpecialCard, isNumberCard } from "./types";
+import { TCard, isNumberCard, isSpecialCard } from "./types";
+import { calcCardPoint } from "./utils";
 
 /**
  * 出すカードを選出する
@@ -50,5 +51,18 @@ export function selectPlayCard(cards: TCard[], beforeCard: TCard) {
    * ワイルドドロー4は本来、手札に出せるカードが無い時に出していいカードであるため、一番優先順位を低くする。
    * ワイルド・シャッフルワイルド・白いワイルドはいつでも出せるので、条件が揃わないと出せない「同じ色 または 同じ数字・記号」のカードより優先度を低くする。
    */
-  return cardsValid.concat(cardsWild).concat(cardsWild4)[0];
+  const cardsAll = [...cardsValid, ...cardsWild, ...cardsWild4].sort((a, b) => {
+    return calcCardPoint(b) - calcCardPoint(a);
+  });
+  console.table(cardsAll);
+  if (cardsAll.length <= 1) {
+    return cardsAll.at(0);
+  }
+  if (
+    isSpecialCard(cardsAll[0]) &&
+    cardsAll[0].special === Special.WILD_DRAW_4
+  ) {
+    return cardsAll[1];
+  }
+  return cardsAll[0];
 }
