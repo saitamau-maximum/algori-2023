@@ -52,11 +52,6 @@ router.get('/admin/web/log/:id', webCtrl.log, {
   allowAnonymous: true,
 });
 
-// ゲームログ取得 (API)
-router.get('/admin/web/log/:id/api', webCtrl.logAPI, {
-  allowAnonymous: true,
-});
-
 // ゲームログDL取得
 router.get('/admin/web/log/download/:id', webCtrl.logDownload, {
   allowAnonymous: true,
