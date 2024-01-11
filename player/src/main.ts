@@ -149,7 +149,6 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
       });
 
       sendEvent(Challenge.name, { is_challenge: false });
-      return;
     }
 
     if (dataRes.must_call_draw_card) {
