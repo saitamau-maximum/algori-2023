@@ -56,7 +56,7 @@ export function selectPlayCard(
     ) {
       // ワイルド・シャッフルワイルド・白いワイルドも場札に関係なく出せる
       cardsWild.push(card);
-    } else if (isNumberCard(card) && card.color === beforeCard.color) {
+    } else if (card.color === beforeCard.color) {
       // 場札と同じ色のカード
       cardsValid.push(card);
     } else if (
