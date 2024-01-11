@@ -210,6 +210,7 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
         );
         // 引いたカードがワイルドとワイルドドロー4の時は変更する色を指定する
         if (
+          playCard &&
           isSpecialCard(playCard) &&
           [Special.WILD, Special.WILD_DRAW_4].includes(playCard.special)
         ) {
