@@ -16,11 +16,3 @@ export function selectChangeColor() {
   // このプログラムでは変更する色をランダムで選択する。
   return ARR_COLOR[randomByNumber(ARR_COLOR.length)];
 }
-
-/**
- * チャンレンジするかを決定する
- */
-export function isChallenge() {
-  // このプログラムでは1/2の確率でチャレンジを行う。
-  return !!randomByNumber(2);
-}
