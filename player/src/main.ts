@@ -36,7 +36,7 @@ import {
   TEventName,
   UpdateColor,
 } from "./gamelog_types";
-import { isSpecialCard } from "./types";
+import { INumberCard, ISpecialCard } from "./types";
 
 /**
  * コマンドラインから受け取った変数等
@@ -98,7 +98,7 @@ addClientEventListener(FirstPlayer.name, (dataRes: FirstPlayer.On) => {
 // 場札の色指定を要求
 addClientEventListener(ColorOfWild.name, (dataRes: ColorOfWild.On) => {
   receiveEvent(ColorOfWild.name, dataRes, () => {
-    const color = selectChangeColor();
+    const color = selectChangeColor([]);
     const data: ColorOfWild.Emit = {
       color_of_wild: color,
     };
@@ -127,6 +127,14 @@ addClientEventListener(ShuffleWild.name, (dataRes: ShuffleWild.On) => {
       });
     };
 });
+
+const isSpecialCard = (card: any): card is ISpecialCard => {
+  return card.special !== undefined;
+};
+
+const isNumberCard = (card: any): card is INumberCard => {
+  return card.number !== undefined;
+};
 
 // 自分の番
 addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
@@ -163,7 +171,12 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
       });
     }
 
-    const playCard = selectPlayCard(cards, dataRes.card_before);
+    const playCard = selectPlayCard(
+      cards,
+      dataRes.card_before,
+      id,
+      dataRes.number_card_of_player
+    );
     if (playCard) {
       // 選出したカードがある時
       console.log(`selected card: ${JSON.stringify(playCard)}`);
@@ -179,7 +192,7 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
         (playCard.special === Special.WILD ||
           playCard.special === Special.WILD_DRAW_4)
       ) {
-        const color = selectChangeColor(); // 指定する色
+        const color = selectChangeColor(cards.filter(isNumberCard)); // 指定する色
         data.color_of_wild = color;
       }
 
@@ -202,14 +215,27 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
           color_of_wild: undefined,
         };
 
-        const playCard = res.draw_card[0]; // 引いたカード。draw-cardイベントのcallbackデータは引いたカードのリスト形式であるため、配列の先頭を指定する。
-        // 引いたカードがワイルドとワイルドドロー4の時は変更する色を指定する
-        if (
-          isSpecialCard(playCard) &&
-          [Special.WILD, Special.WILD_DRAW_4].includes(playCard.special)
-        ) {
-          const color = selectChangeColor();
-          data.color_of_wild = color;
+
+        // 引いたカードの中から出せるカードを選出する
+        const playCard = selectPlayCard(
+          res.draw_card,
+          dataRes.card_before,
+          id,
+          dataRes.number_card_of_player
+        );
+        if (playCard) {
+          // 出すカードがワイルドとワイルドドロー4の時は変更する色を指定する
+          if (
+            isSpecialCard(playCard) &&
+            (playCard.special === Special.WILD ||
+              playCard.special === Special.WILD_DRAW_4)
+          ) {
+            const color = selectChangeColor(res.draw_card.filter(isNumberCard)); // 指定する色
+            data.color_of_wild = color;
+          }
+        } else {
+          // 選出したカードが無かった時
+          data.is_play_card = false;
         }
 
         // 引いたカードを出すイベントを実行
