@@ -8,7 +8,7 @@ import {
   TEST_TOOL_EVENT_DATA_Wrap,
 } from "./constant";
 import { selectPlayCard } from "./select";
-import { isChallenge, randomByNumber, selectChangeColor } from "./utils";
+import { randomByNumber, selectChangeColor } from "./utils";
 import {
   addClientEventListener,
   initializeClient,
