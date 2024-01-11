@@ -76,11 +76,39 @@ export function selectPlayCard(
     }
   }
 
-  /**
-   * 出せるカードのリストを結合し、先頭のカードを返却する。
-   * このプログラムでは優先順位を、「同じ色 または 同じ数字・記号」 > 「ワイルド・シャッフルワイルド・白いワイルド」 > ワイルドドロー4の順番とする。
-   * ワイルドドロー4は本来、手札に出せるカードが無い時に出していいカードであるため、一番優先順位を低くする。
-   * ワイルド・シャッフルワイルド・白いワイルドはいつでも出せるので、条件が揃わないと出せない「同じ色 または 同じ数字・記号」のカードより優先度を低くする。
-   */
-  return cardsValid.concat(cardsWild).concat(cardsWild4)[0];
+  const cardsAll = [...cardsValid, ...cardsWild, ...cardsWild4].sort((a, b) => {
+    return calcCardPoint(b) - calcCardPoint(a);
+  });
+  if (cardsAll.length === 0) return undefined;
+  if (
+    isSpecialCard(cardsAll[0]) &&
+    cardsAll[0].special === Special.WILD_DRAW_4
+  ) {
+    return cardsAll[1];
+  }
+  return cardsAll[0];
+}
+
+/**
+ * カードから得点を算出する
+ */
+export function calcCardPoint(cards: TCard) {
+  if (isNumberCard(cards)) {
+    return cards.number;
+  }
+  if (isSpecialCard(cards)) {
+    switch (cards.special) {
+      case "skip":
+      case "reverse":
+      case "draw_2":
+        return 20;
+      case "wild":
+      case "wild_draw_4":
+        return 50;
+      case "wild_shuffle":
+      case "white_wild":
+        return 40;
+    }
+  }
+  return 0;
 }
