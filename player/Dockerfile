@@ -1,17 +1,12 @@
-FROM node:20.10.0-slim
-
+FROM public.ecr.aws/docker/library/node:20
 WORKDIR /app
-
-COPY package*.json ./
-
-RUN npm ci
 
 COPY . .
 
-RUN npm run build
+RUN npm install
 
 EXPOSE 8081
 
-ENTRYPOINT [ "node", "dist/main.js"]
+ENTRYPOINT [ "node", "player.js"]
 
 CMD [ "http://localhost:8080/", "Dealer 1", "Player 1" ]

@@ -2,19 +2,22 @@
   "name": "uno-player",
   "version": "0.0.1",
   "private": true,
-  "main": "dist/main.js",
+  "main": "player.js",
   "scripts": {
-    "start": "npm run build && node main.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
-    "build": "tsc"
+    "start": "npm run build && node player.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
+    "build": "webpack --mode=production"
   },
   "dependencies": {
     "bluebird": "^3.7.2",
-    "socket.io-client": "^2.3.0",
-    "typescript": "^5.3.3"
+    "socket.io-client": "^2.3.0"
   },
   "devDependencies": {
     "@types/bluebird": "^3.5.42",
     "@types/node": "^20.10.4",
-    "@types/socket.io-client": "^1.4.36"
+    "@types/socket.io-client": "^1.4.36",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
   }
 }
