@@ -56,7 +56,7 @@ export function selectPlayCard(
     ) {
       // ワイルド・シャッフルワイルド・白いワイルドも場札に関係なく出せる
       cardsWild.push(card);
-    } else if (isNumberCard(card) && card.color === beforeCard.color) {
+    } else if (card.color === beforeCard.color) {
       // 場札と同じ色のカード
       cardsValid.push(card);
     } else if (
@@ -76,17 +76,14 @@ export function selectPlayCard(
     }
   }
 
-  const cardsAll = [...cardsValid, ...cardsWild, ...cardsWild4].sort((a, b) => {
+  const cardsAll = cardsValid.sort((a, b) => {
     return calcCardPoint(b) - calcCardPoint(a);
   });
-  if (cardsAll.length === 0) return undefined;
-  if (
-    isSpecialCard(cardsAll[0]) &&
-    cardsAll[0].special === Special.WILD_DRAW_4
-  ) {
-    return cardsAll[1];
-  }
-  return cardsAll[0];
+  if (cardsAll.length !== 0) return cardsAll[0];
+
+  return [...cardsWild, ...cardsWild4].sort((a, b) => {
+    return calcCardPoint(b) - calcCardPoint(a);
+  })[0];
 }
 
 /**
