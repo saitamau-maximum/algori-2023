@@ -47,7 +47,7 @@ export const DrawReason: Record<string, TDrawReason> = {
 export const TEST_TOOL_HOST_PORT = "3000"; // 開発ガイドラインツールのポート番号
 export const ARR_COLOR = [Color.RED, Color.YELLOW, Color.BLUE, Color.GREEN]; // 色変更の選択肢
 
-export const SPECIAL_LOGIC_TITLE = "◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯◯"; // スペシャルロジック名
+export const SPECIAL_LOGIC_TITLE = "あえてチャレンジしない！！！"; // スペシャルロジック名
 
 // 開発ガイドラインツールSTEP1で送信するサンプルデータ
 export const TEST_TOOL_EVENT_DATA_Wrap = (player: string, roomName: string) =>

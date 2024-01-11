@@ -8,7 +8,7 @@ import {
   TEST_TOOL_EVENT_DATA_Wrap,
 } from "./constant";
 import { selectPlayCard } from "./select";
-import { isChallenge, randomByNumber, selectChangeColor } from "./utils";
+import { randomByNumber, selectChangeColor } from "./utils";
 import {
   addClientEventListener,
   initializeClient,
@@ -143,24 +143,18 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
 
     if (dataRes.draw_reason === DrawReason.WILD_DRAW_4) {
       // カードを引く理由がワイルドドロー4の時、チャレンジを行うことができる。
-      if (isChallenge()) {
-        sendEvent(Challenge.name, { is_challenge: true });
-        return;
-      }
+      // スペシャルロジック: チャレンジしない！！！
+      sendEvent(SpecialLogic.name, {
+        title: SPECIAL_LOGIC_TITLE,
+      });
+
+      sendEvent(Challenge.name, { is_challenge: false });
     }
 
     if (dataRes.must_call_draw_card) {
       // 引かなければいけない場合
       sendEvent(DrawCard.name, {});
       return;
-    }
-
-    // スペシャルロジックを発動させる
-    const specialLogicNumRundom = randomByNumber(10); // 1/10で発動するように調整
-    if (specialLogicNumRundom === 0) {
-      sendEvent(SpecialLogic.name, {
-        title: SPECIAL_LOGIC_TITLE,
-      });
     }
 
     const playCard = selectPlayCard(cards, dataRes.card_before);
