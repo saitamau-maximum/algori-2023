@@ -215,6 +215,7 @@ addClientEventListener(NextPlayer.name, (dataRes: NextPlayer.On) => {
           color_of_wild: undefined,
         };
 
+
         // 引いたカードの中から出せるカードを選出する
         const playCard = selectPlayCard(
           res.draw_card,

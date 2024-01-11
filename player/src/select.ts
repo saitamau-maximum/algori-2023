@@ -1,5 +1,5 @@
 import { Special } from "./constant";
-import { TCard, INumberCard, ISpecialCard } from "./types";
+import { TCard, isSpecialCard, isNumberCard } from "./types";
 
 const isNumberCard = (card: any): card is INumberCard => {
   return card.number !== undefined;
@@ -74,6 +74,7 @@ export function selectPlayCard(
       (isNumberCard(card) &&
         isNumberCard(beforeCard) &&
         Number(card.number) === Number(beforeCard.number))
+
     ) {
       // 場札と数字または記号が同じカード
       cardsValid.push(card);
