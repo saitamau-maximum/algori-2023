@@ -4,7 +4,7 @@
   "private": true,
   "main": "player.js",
   "scripts": {
-    "start": "npm run build && node player.js 'http://localhost:8080/' 'Dealer 1' 'Player 1'",
+    "start": "npm run build && node player.js \"http://localhost:8080/\" \"Dealer 1\" \"Player 1\"",
     "build": "webpack --mode=production"
   },
   "dependencies": {
